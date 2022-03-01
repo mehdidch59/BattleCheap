@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+
+<head>
+  <meta charset="utf-8">
+  <title>BattleCheap - Register</title>
+  <script src="/socket.io/socket.io.js"></script>
+  <link rel="icon" type="image/x-icon" href="../Images/login/ghost.png" />
+  <link rel="stylesheet" href="../CSS/register.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <link href="https://fonts.googleapis.com/css?family=Permanent+Marker" rel="stylesheet">
+</head>
+
+<body>
+  <div class="signup-form">
+    <form id="register" action="register" method="post">
+      <h1>Sign Up</h1>
+      <input id="username" type="text" placeholder="Full Name" autocomplete="username" class="txtb" required>
+      <input id="password" type="password" placeholder="Password" autocomplete="new-password" class="txtb" required>
+      <input type="submit" value="Sign up" class="signup-btn">
+      <a href="login">Already Have one ?</a>
+    </form>
+  </div>
+</body>
+<script src="../modules/logger.js"></script>
+<script src="../JS/register.js"></script>
+<script>let socket = io();</script>
+
+</html>

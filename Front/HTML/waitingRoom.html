@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <title>BattleCheap - Waitingroom</title>
+
+    <!--    ajout du logo du site-->
+    <link rel="icon" type="image/x-icon" href="../Images/logo.png" />
+
+    <!-- bootstrap-->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/css/bootstrap.min.css"
+        integrity="sha384-TX8t27EcRE3e/ihU7zmQxVncDAy5uIKz4rEkgIXeMed4M0jlfIDPvg6uqKI2xXr2" crossorigin="anonymous">
+
+    <!-- include css-->
+    <link rel="stylesheet" href="../Css/waitingRoom.css" />
+
+    <!-- modules -->
+    <script src="../JS/barHome.js"></script>
+
+    <!-- socket-io-->
+    <script src="/socket.io/socket.io.js"></script>
+
+    <!-- jQuery-->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+</head>
+
+<!-- header -->
+<header>
+    <nav>
+        <nav class="navbar navbar-expand-sm navbar-dark">
+            <a class="logo mr-3" href="/"></a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#collapsibleNavbar">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="collapsibleNavbar">
+                <ul class="navbar-nav">
+                    <li class="nav-item" id="jouer">
+                        <a class="nav-link text-left" href="/">QUITTER</a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+    </nav>
+
+</header>
+
+<body>
+    <div id="waiting-room" style="display:none;">
+        <div class="container">
+            <!-- Corps entre les bannière -->
+            <div class="row">
+                <!-- DIV de gauche [chargement] -->
+                <div class="col-md-8 bg-black text-white">
+                    <div class="row">
+                        <div class="message">
+                            <h4>Vous vous trouvez actuellement dans la salle d'attente</h4>
+                        </div>
+                        <div class="center col-md-10">
+                            <div class="gif">
+                                <h4>Patiente frérot</h4>
+                                <iframe src="../Images/waiting.gif" width="324" height="245" frameBorder="0"
+                                    class=giphy-embed></iframe>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- DIV de droite [tableau des scores] -->
+                <div class="col-md-4 bg-black text-white">
+                    <div class="row">
+                        <div class="message">
+                            <p>Lorsque un adversaire rejoindra la salle d'attente, la partie commencera</p>
+                            <button onclick="window.location.href = '/game';" id="start" style="display: none">Commencer
+                                la Partie!</a></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let socket = io();
+        socket.emit("getRoom");
+
+        socket.on("redirectJ1", () => {
+            document.getElementById("start").style.display = "block";
+            location.href = '/game';
+        })
+        socket.on("redirectJ2", () => {
+            document.getElementById("start").style.display = "block";
+            location.href = '/game';
+        })
+        socket.on("removePlay", () => {
+            document.getElementById("start").style.display = "none";
+        })
+    </script>
+    <script src="../JS/scoreView.js"></script>
+    <script type="text/javascript" src="../JS/client.js"></script>
+</body>
+
+</html>

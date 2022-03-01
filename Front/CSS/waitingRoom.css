@@ -1,0 +1,14 @@
+.message {
+    margin-top: 2%;
+}
+
+.center {
+    text-align: center;
+    margin-top: 35vh;
+    transform: translateY(-50%);
+}
+
+
+body{
+    background-image: url(../Images/background.jpg);
+}

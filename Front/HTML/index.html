@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <title>BattleCheap</title>
+
+    <!--    ajout du logo du site-->
+    <link rel="icon" type="image/x-icon" href="../Images/logo.png" />
+
+    <!-- bootstrap-->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/css/bootstrap.min.css"
+        integrity="sha384-TX8t27EcRE3e/ihU7zmQxVncDAy5uIKz4rEkgIXeMed4M0jlfIDPvg6uqKI2xXr2" crossorigin="anonymous">
+
+    <!-- include css-->
+    <link rel="stylesheet" type="text/css" href="../CSS/home.css" />
+
+    <!-- include js-->
+    <script src="../JS/barHome.js"></script>
+
+    <!-- socket io-->
+    <script src="/socket.io/socket.io.js"></script>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+</head>
+<!-- header -->
+<header>
+    <nav>
+        <nav class="navbar navbar-expand-sm navbar-dark">
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#collapsibleNavbar">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="collapsibleNavbar">
+                <ul class="navbar-nav">
+                    <!---Ajout d'un "bonjour pseudo"-->
+                    <li class="nav-item" id="bonjour">
+                        <a class="nav-link text-left">Bonjour <span id="username"></span> ! </a>
+                    </li>
+                    <li class="nav-item" id="jouer">
+                        <a class="nav-link text-left" href="waitingRoom">Jouer</a>
+                    </li>
+                    <li class="nav-item" id="lienLog">
+                        <a class="nav-link text-left" href="login">Se connecter</a>
+                    </li>
+                    <li class="nav-item" id="lienReg">
+                        <a class="nav-link text-left" href="register">Créer un compte</a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+    </nav>
+
+    <!-- Fond d'écran de l'accueil -->
+    <div>
+        <header class="masthead">
+        </header>
+    </div>
+
+    <!-- lancer les événements de scroll et de resize -->
+    <script>event.addEvent()</script>
+</header>
+
+<body>
+    <div class="main">
+        <div class="container">
+            <!-- Corps entre les bannières -->
+            <div class="row">
+                <!-- DIV de gauche [description du jeu] -->
+                <div class="col-md-8 bg-black text-secondary">
+                    <h3><img src="../Images/logo.png" class="icon mb-2 mr-1" />Bienvenue sur BattleCheap</h3>
+                    <a class="logo mr-3" href="/"></a>
+                    <p>Bienvenue sur BattleShip soldat, préparez-vous pour la guerre!</p>
+                    <p>Description du jeu:</p>
+                    <p>La bataille navale ou touché-coulé est un jeu de société commercialisé en 1831 qui se joue à deux
+                        soldats.
+                        Le principe du jeu, si vous ne le connaissez pas, est de placer des « navires » sur une grille
+                        tenue secrète et de tenter de couler les navires adverses.
+                        La partie s’arrête lorsque l’un des deux soldat a réussi à couler tous les navires de l’autre.
+                    </p>
+                    <p>Voici les navires :</p>
+
+                    <ul>
+                        <img src="../Images/ships/boat_5.png" class="navire" /> 1 porte-avion (5 cases)<br>
+                        <img src="../Images/ships/boat_1.png" class="navire" /> 1 croiseur (4 cases)<br>
+                        <img src="../Images/ships/boat_2.png" class="navire" /> 2 sous-marins (3 cases chacun)<br>
+                        <img src="../Images/ships/boat_3.png" class="navire" /> 1 torpilleur (2 cases)<br>
+                    </ul>
+                </div>
+
+                <!-- DIV de groite [explication de connexion] -->
+                <div class="col-md-4 bg-black text-secondary">
+                    <h3><img src="../Images/information.png" class="icon mb-2 mr-1" />Informations</h3>
+                    <p>Jouer à la Bataille Navale:</p>
+                    <p>1. Créer un compte</p>
+                    <p>2. Cliquer sur "Jouer"</p>
+                    <p>3. Attendre un adversaire et... LET'S BATTLE.</p>
+                </div>
+                <div class="col-sm-1"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- footer -->
+    <footer>
+        <p>BattleCheap de Djallal Maxime Enzo Aurelien et Steven CIR2</p>
+    </footer>
+
+</body>
+
+<script>let socket = io();</script>
+<script src="../JS/home.js"></script>
+<script src="../modules/logger.js"></script>
+
+</html>
