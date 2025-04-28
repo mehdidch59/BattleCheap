@@ -1,103 +1,328 @@
 <!DOCTYPE html>
-<html>
+<html lang="fr">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>BattleCheap - Salle d'attente</title>
 
-<head>
-    <meta charset="utf-8" />
-    <title>BattleCheap - Waitingroom</title>
+        <!-- Logo du site -->
+        <link rel="icon" type="image/x-icon" href="../Images/logo.png" />
 
-    <!--    ajout du logo du site-->
-    <link rel="icon" type="image/x-icon" href="../Images/logo.png" />
+        <!-- Bootstrap -->
+        <link rel="stylesheet" href="/node_modules/bootstrap/dist/css/bootstrap.min.css" />
+        
+        <!-- Font Awesome -->
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+        
+        <!-- Theme naval moderne -->
+        <link rel="stylesheet" type="text/css" href="../CSS/modern-naval.css" />
+        
+        <!-- Custom CSS -->
+        <link rel="stylesheet" type="text/css" href="../CSS/home.css" />
 
-    <!-- bootstrap-->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/css/bootstrap.min.css"
-        integrity="sha384-TX8t27EcRE3e/ihU7zmQxVncDAy5uIKz4rEkgIXeMed4M0jlfIDPvg6uqKI2xXr2" crossorigin="anonymous">
+        <!-- Socket.io -->
+        <script src="/socket.io/socket.io.js"></script>
+        
+        <!-- jQuery -->
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    </head>
 
-    <!-- include css-->
-    <link rel="stylesheet" href="../Css/waitingRoom.css" />
+    <body>
+        <!-- Effets visuels -->
+        <div class="grid-bg"></div>
+        <div class="radar-ping"></div>
+        <div class="scanline"></div>
 
-    <!-- modules -->
-    <script src="../JS/barHome.js"></script>
-
-    <!-- socket-io-->
-    <script src="/socket.io/socket.io.js"></script>
-
-    <!-- jQuery-->
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-</head>
-
-<!-- header -->
-<header>
-    <nav>
-        <nav class="navbar navbar-expand-sm navbar-dark">
-            <a class="logo mr-3" href="/"></a>
-            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#collapsibleNavbar">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="collapsibleNavbar">
-                <ul class="navbar-nav">
-                    <li class="nav-item" id="jouer">
-                        <a class="nav-link text-left" href="/">QUITTER</a>
-                    </li>
-                </ul>
+        <!-- Navbar -->
+        <nav class="naval-navbar navbar navbar-expand-lg">
+            <div class="container">
+                <a class="navbar-brand" href="/">
+                    <img src="../Images/logo.png" alt="BattleCheap Logo" width="30" height="30" class="d-inline-block align-top me-2">
+                    BATTLECHEAP
+                </a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav ms-auto">
+                        <li class="nav-item" id="bonjour">
+                            <a class="nav-link">
+                                <i class="fas fa-user me-2"></i>Bonjour <span id="username"></span>
+                            </a>
+                        </li>
+                        <li class="nav-item active" id="jouer">
+                            <a class="nav-link" href="waitingRoom">
+                                <i class="fas fa-gamepad me-2"></i>JOUER
+                            </a>
+                        </li>
+                        <li class="nav-item" id="lienLog">
+                            <a class="nav-link" href="login">
+                                <i class="fas fa-sign-in-alt me-2"></i>CONNEXION
+                            </a>
+                        </li>
+                        <li class="nav-item" id="lienReg">
+                            <a class="nav-link" href="register">
+                                <i class="fas fa-user-plus me-2"></i>CRÉER UN COMPTE
+                            </a>
+                        </li>
+                    </ul>
+                </div>
             </div>
         </nav>
-    </nav>
 
-</header>
-
-<body>
-    <div id="waiting-room" style="display:none;">
-        <div class="container">
-            <!-- Corps entre les bannière -->
-            <div class="row">
-                <!-- DIV de gauche [chargement] -->
-                <div class="col-md-8 bg-black text-white">
-                    <div class="row">
-                        <div class="message">
-                            <h4>Vous vous trouvez actuellement dans la salle d'attente</h4>
+        <!-- Main Content -->
+        <main class="container py-5">
+            <div class="row justify-content-center">
+                <div class="col-lg-8">
+                    <div class="naval-card position-relative">
+                        <!-- Effet de lueur -->
+                        <div class="hero-glow" style="top: 30%; right: 20%; transform: translate(0, -50%);"></div>
+                        <div class="hero-glow" style="bottom: 20%; left: 20%; transform: translate(0, 0);"></div>
+                        
+                        <div class="card-header text-center py-4">
+                            <h2><i class="fas fa-satellite-dish me-2"></i>RECHERCHE DE MISSION</h2>
                         </div>
-                        <div class="center col-md-10">
-                            <div class="gif">
-                                <h4>Patiente frérot</h4>
-                                <iframe src="../Images/waiting.gif" width="324" height="245" frameBorder="0"
-                                    class=giphy-embed></iframe>
+                        
+                        <div class="card-body text-center p-5">
+                            <div class="mb-4">
+                                <div class="radar-container">
+                                    <div class="radar-screen">
+                                        <div class="radar-sweep"></div>
+                                        <div class="radar-blip hidden" id="player-blip"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="status-message mb-4">
+                                <span class="status-indicator status-waiting"></span>
+                                <span class="message">Centre de commandement en attente d'une connexion sécurisée...</span>
+                            </div>
+                            
+                            <div class="waiting-counter mb-5">
+                                <i class="fas fa-users me-2"></i> Marins en attente: 
+                                <span id="nbPlayer" class="badge bg-primary">0</span>
+                            </div>
+                            
+                            <div class="text-center mt-5 py-4">
+                                <a href="/" class="btn btn-naval btn-lg">
+                                    <i class="fas fa-home me-2"></i>RETOUR À LA BASE
+                                </a>
                             </div>
                         </div>
                     </div>
                 </div>
-
-                <!-- DIV de droite [tableau des scores] -->
-                <div class="col-md-4 bg-black text-white">
-                    <div class="row">
-                        <div class="message">
-                            <p>Lorsque un adversaire rejoindra la salle d'attente, la partie commencera</p>
-                            <button onclick="window.location.href = '/game';" id="start" style="display: none">Commencer
-                                la Partie!</a></button>
-                        </div>
-                    </div>
-                </div>
             </div>
-        </div>
-    </div>
+        </main>
 
-    <script>
-        let socket = io();
-        socket.emit("getRoom");
+        <!-- Footer -->
+        <footer class="py-4 text-center">
+            <div class="container">
+                <p class="mb-0">BattleCheap &copy; 2023 | Développé par Djallal, Maxime, Enzo, Aurelien et Steven | CIR2</p>
+            </div>
+        </footer>
 
-        socket.on("redirectJ1", () => {
-            document.getElementById("start").style.display = "block";
-            location.href = '/game';
-        })
-        socket.on("redirectJ2", () => {
-            document.getElementById("start").style.display = "block";
-            location.href = '/game';
-        })
-        socket.on("removePlay", () => {
-            document.getElementById("start").style.display = "none";
-        })
-    </script>
-    <script src="../JS/scoreView.js"></script>
-    <script type="text/javascript" src="../JS/client.js"></script>
-</body>
+        <!-- Scripts -->
+        <script>
+            let socket = io();
+            let redirected = false;
+            
+            // Mise à jour de l'interface utilisateur
+            function updateUI(playerCount) {
+                document.getElementById('nbPlayer').textContent = playerCount;
+                
+                // Afficher le blip du joueur quand un autre joueur est détecté
+                if (playerCount > 0) {
+                    document.getElementById('player-blip').classList.remove('hidden');
+                    document.querySelector('.status-message .message').textContent = 
+                        "Signal détecté - Établissement de la liaison...";
+                }
+                
+                // Animation pour suivre le curseur avec un effet de lueur
+                document.addEventListener('mousemove', function(e) {
+                    const glow = document.createElement('div');
+                    glow.classList.add('cursor-glow');
+                    glow.style.left = e.pageX + 'px';
+                    glow.style.top = e.pageY + 'px';
+                    document.body.appendChild(glow);
+                    
+                    setTimeout(() => {
+                        glow.remove();
+                    }, 1000);
+                });
+            }
+            
+            // Afficher le nom d'utilisateur
+            document.addEventListener('DOMContentLoaded', function() {
+                socket.emit('isSession');
+                
+                // Déclencher la recherche d'une salle une seule fois au chargement
+                socket.emit('getRoom');
+                
+                // Debug
+                console.log("Socket connecté, en attente de redirection");
+            });
+            
+            socket.on('onSession', function(data) {
+                if (data) {
+                    document.getElementById('username').textContent = data;
+                    document.getElementById('lienLog').style.display = 'none';
+                    document.getElementById('lienReg').style.display = 'none';
+                } else {
+                    document.getElementById('bonjour').style.display = 'none';
+                }
+            });
+            
+            // Écouter les événements de redirection
+            socket.on('redirectJ1', function() {
+                if (!redirected) {
+                    redirected = true;
+                    document.querySelector('.status-message .message').textContent = 
+                        "Connexion établie - Démarrage de la mission...";
+                    
+                    console.log("Redirection vers le jeu en cours...");
+                    
+                    // Forcer la redirection directe après un court délai
+                    setTimeout(function() {
+                        window.location.href = '/game';
+                    }, 1000);
+                }
+            });
+            
+            // Deuxième méthode par sécurité (pour le joueur 2)
+            socket.on('redirectJ2', function() {
+                if (!redirected) {
+                    redirected = true;
+                    document.querySelector('.status-message .message').textContent = 
+                        "Connexion établie - Démarrage de la mission...";
+                    
+                    console.log("Redirection vers le jeu en cours (joueur 2)...");
+                    
+                    // Forcer la redirection directe après un court délai
+                    setTimeout(function() {
+                        window.location.href = '/game';
+                    }, 1000);
+                }
+            });
+            
+            // Écouter l'événement 'join' comme dans client.js
+            socket.on('join', function(gameId) {
+                if (!redirected) {
+                    redirected = true;
+                    console.log("Événement join reçu avec gameId:", gameId);
+                    
+                    // Forcer la redirection directe après un court délai
+                    setTimeout(function() {
+                        window.location.href = '/game';
+                    }, 500);
+                }
+            });
+            
+            // Mise à jour du nombre de joueurs en attente
+            socket.on('playerState', function(data) {
+                updateUI(data);
+            });
+        </script>
+        <script src="/node_modules/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+        <script src="../modules/logger.js"></script>
+        
+        <style>
+            /* Styles spécifiques pour la salle d'attente */
+            .radar-container {
+                width: 200px;
+                height: 200px;
+                margin: 0 auto 30px;
+                position: relative;
+            }
+            
+            .radar-screen {
+                width: 100%;
+                height: 100%;
+                background-color: rgba(10, 25, 47, 0.7);
+                border: 2px solid var(--accent);
+                border-radius: 50%;
+                position: relative;
+                overflow: hidden;
+                box-shadow: 0 0 15px rgba(0, 224, 255, 0.5);
+            }
 
+            /* .text-center mt-5 py-4 {
+                text-align: center;
+                margin-top: 200px;
+                padding: 10px;
+            } */
+            
+            .radar-sweep {
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                border-radius: 50%;
+                background: conic-gradient(
+                    transparent 0deg,
+                    var(--accent) 20deg,
+                    transparent 40deg,
+                    transparent 360deg
+                );
+                animation: radar-sweep 3s infinite linear;
+                opacity: 0.7;
+            }
+            
+            @keyframes radar-sweep {
+                from { transform: rotate(0deg); }
+                to { transform: rotate(360deg); }
+            }
+            
+            .radar-blip {
+                width: 10px;
+                height: 10px;
+                background-color: var(--warning);
+                border-radius: 50%;
+                position: absolute;
+                top: 70%;
+                right: 30%;
+                box-shadow: 0 0 10px var(--warning);
+                animation: blip-pulse 1.5s infinite;
+            }
+            
+            .radar-blip.hidden {
+                display: none;
+            }
+            
+            @keyframes blip-pulse {
+                0% { transform: scale(0.8); opacity: 0.6; }
+                50% { transform: scale(1.2); opacity: 1; }
+                100% { transform: scale(0.8); opacity: 0.6; }
+            }
+            
+            .status-message {
+                font-family: 'Orbitron', sans-serif;
+                font-size: 1.1rem;
+                color: var(--light);
+                letter-spacing: 1px;
+            }
+            
+            .waiting-counter {
+                font-family: 'Orbitron', sans-serif;
+                font-size: 1.2rem;
+                color: var(--accent);
+                letter-spacing: 1px;
+            }
+            
+            .badge {
+                background-color: var(--accent) !important;
+                color: var(--primary);
+                font-size: 1rem;
+                padding: 8px 12px;
+                border-radius: 5px;
+                animation: badge-pulse 2s infinite;
+            }
+            
+            @keyframes badge-pulse {
+                0% { opacity: 0.8; }
+                50% { opacity: 1; }
+                100% { opacity: 0.8; }
+            }
+        </style>
+    </body>
 </html>

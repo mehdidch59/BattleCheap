@@ -1,13 +1,13 @@
 function padTo2Digits(num) {
-  return num.toString().padStart(2, '0');
+    return num.toString().padStart(2, '0');
 }
 
 function formatDate(date) {
-  return [
-    padTo2Digits(date.getDate()),
-    padTo2Digits(date.getMonth() + 1),
-    date.getFullYear(),
-  ].join('/');
+    return [
+        padTo2Digits(date.getDate()),
+        padTo2Digits(date.getMonth() + 1),
+        date.getFullYear(),
+    ].join('/');
 }
 
 // 👇️ 24/10/2021 (mm/dd/yyyy)

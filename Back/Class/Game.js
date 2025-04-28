@@ -1,5 +1,5 @@
-var Player = require('./player.js');
-var Settings = require('./settings.js');
+var Player = require('./Player.js');
+var Settings = require('./Settings.js');
 var GameStatus = require('./gameStatus.js');
 
 /**
@@ -8,11 +8,11 @@ var GameStatus = require('./gameStatus.js');
  * @param {type} idPlayer2 Socket ID du soldat 2
  */
 function BattleCheapGame(idPlayer1, idPlayer2) {
-  this.currentPlayer = Math.floor(Math.random() * 2);
-  this.winningPlayer = null;
-  this.gameStatus = GameStatus.inProgress;
+    this.currentPlayer = Math.floor(Math.random() * 2);
+    this.winningPlayer = null;
+    this.gameStatus = GameStatus.inProgress;
 
-  this.players = [new Player(idPlayer1), new Player(idPlayer2)];
+    this.players = [new Player(idPlayer1), new Player(idPlayer2)];
 }
 
 /**
@@ -20,76 +20,79 @@ function BattleCheapGame(idPlayer1, idPlayer2) {
  * @param {type} player
  * @returns {undefined}
  */
-BattleCheapGame.prototype.getPlayerId = function(player) {
-  return this.players[player].id;
+BattleCheapGame.prototype.getPlayerId = function (player) {
+    return this.players[player].id;
 };
 
 /**
  * Reçoit le socket ID du joueur gagné
  * @returns {BattleCheapGame.prototype@arr;players@pro;id}
  */
-BattleCheapGame.prototype.getWinnerId = function() {
-  if(this.winningPlayer === null) {
-    return null;
-  }
-  return this.players[this.winningPlayer].id;
+BattleCheapGame.prototype.getWinnerId = function () {
+    if (this.winningPlayer === null) {
+        return null;
+    }
+    return this.players[this.winningPlayer].id;
 };
 
 /**
  * Obtient le socket ID du joueur perdu
  * @returns {BattleCheapGame.prototype@arr;players@pro;id}
  */
-BattleCheapGame.prototype.getLoserId = function() {
-  if(this.winningPlayer === null) {
-    return null;
-  }
-  var loser = this.winningPlayer === 0 ? 1 : 0;
-  return this.players[loser].id;
+BattleCheapGame.prototype.getLoserId = function () {
+    if (this.winningPlayer === null) {
+        return null;
+    }
+    var loser = this.winningPlayer === 0 ? 1 : 0;
+    return this.players[loser].id;
 };
 
 /**
  * Switch les tours
  */
-BattleCheapGame.prototype.switchPlayer = function() {
-  this.currentPlayer = this.currentPlayer === 0 ? 1 : 0;
+BattleCheapGame.prototype.switchPlayer = function () {
+    this.currentPlayer = this.currentPlayer === 0 ? 1 : 0;
 };
 
 /**
  * Interrompt le jeu
  * @param {Number} player
  */
-BattleCheapGame.prototype.abortGame = function(player) {
-  // Le soldat gagne
-  this.gameStatus = GameStatus.gameOver;
-  this.winningPlayer = player === 0 ? 1 : 0;
-}
+BattleCheapGame.prototype.abortGame = function (player) {
+    // Le soldat gagne
+    this.gameStatus = GameStatus.gameOver;
+    this.winningPlayer = player === 0 ? 1 : 0;
+};
 
 /**
  * Tir pour le joueur actuel
  * @param {Object} position avec x et y
  * @returns {boolean} True si le tire touche
  */
-BattleCheapGame.prototype.shoot = function(position) {
-  var opponent = this.currentPlayer === 0 ? 1 : 0,
-      gridIndex = position.y * Settings.gridCols + position.x;
+BattleCheapGame.prototype.shoot = function (position) {
+    var opponent = this.currentPlayer === 0 ? 1 : 0,
+        gridIndex = position.y * Settings.gridCols + position.x;
 
-  if(this.players[opponent].shots[gridIndex] === 0 && this.gameStatus === GameStatus.inProgress) {
-    // On n'a pas encore tiré sur ce carré.
-    if(!this.players[opponent].shoot(gridIndex)) {
-      // Manqué
-      this.switchPlayer();
+    if (
+        this.players[opponent].shots[gridIndex] === 0 &&
+        this.gameStatus === GameStatus.inProgress
+    ) {
+        // On n'a pas encore tiré sur ce carré.
+        if (!this.players[opponent].shoot(gridIndex)) {
+            // Manqué
+            this.switchPlayer();
+        }
+
+        // Check si la game est finie
+        if (this.players[opponent].getShipsLeft() <= 0) {
+            this.gameStatus = GameStatus.gameOver;
+            this.winningPlayer = opponent === 0 ? 1 : 0;
+        }
+
+        return true;
     }
 
-    // Check si la game est finie
-    if(this.players[opponent].getShipsLeft() <= 0) {
-      this.gameStatus = GameStatus.gameOver;
-      this.winningPlayer = opponent === 0 ? 1 : 0;
-    }
-    
-    return true;
-  }
-
-  return false;
+    return false;
 };
 
 /**
@@ -98,12 +101,12 @@ BattleCheapGame.prototype.shoot = function(position) {
  * @param {Number} gridOwner Joueur dont l'état de la grille doit être mis à jour
  * @returns {BattleCheapGame.prototype.getGameState.BattleCheapGameAnonym$0}
  */
-BattleCheapGame.prototype.getGameState = function(player, gridOwner) {
-  return {
-    turn: this.currentPlayer === player,                 // C'est le tour de ce joueur ?
-    gridIndex: player === gridOwner ? 0 : 1,             // Quelle grille doit être mise à jour ? (0 = ma grille, 1 = adversaire)
-    grid: this.getGrid(gridOwner, player !== gridOwner)  // Cacher les navires non coulés s'il ne s'agit pas de sa propre grille
-  };
+BattleCheapGame.prototype.getGameState = function (player, gridOwner) {
+    return {
+        turn: this.currentPlayer === player, // C'est le tour de ce joueur ?
+        gridIndex: player === gridOwner ? 0 : 1, // Quelle grille doit être mise à jour ? (0 = ma grille, 1 = adversaire)
+        grid: this.getGrid(gridOwner, player !== gridOwner), // Cacher les navires non coulés s'il ne s'agit pas de sa propre grille
+    };
 };
 
 /**
@@ -112,11 +115,13 @@ BattleCheapGame.prototype.getGameState = function(player, gridOwner) {
  * @param {type} hideShips Cacher les navires non coulé
  * @returns {BattleCheapGame.prototype.getGridState.BattleCheapGameAnonym$0}
  */
-BattleCheapGame.prototype.getGrid = function(player, hideShips) {
-  return {
-    shots: this.players[player].shots,
-    ships: hideShips ? this.players[player].getSunkShips() : this.players[player].ships
-  };
+BattleCheapGame.prototype.getGrid = function (player, hideShips) {
+    return {
+        shots: this.players[player].shots,
+        ships: hideShips
+            ? this.players[player].getSunkShips()
+            : this.players[player].ships,
+    };
 };
 
 module.exports = BattleCheapGame;

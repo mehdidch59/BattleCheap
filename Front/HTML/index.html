@@ -1,114 +1,228 @@
 <!DOCTYPE html>
-<html>
+<html lang="fr">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>BattleCheap</title>
 
-<head>
-    <meta charset="utf-8" />
-    <title>BattleCheap</title>
+        <!-- Logo du site -->
+        <link rel="icon" type="image/x-icon" href="../Images/logo.png" />
 
-    <!--    ajout du logo du site-->
-    <link rel="icon" type="image/x-icon" href="../Images/logo.png" />
+        <!-- Bootstrap -->
+        <link rel="stylesheet" href="/node_modules/bootstrap/dist/css/bootstrap.min.css" />
+        
+        <!-- Font Awesome -->
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+        
+        <!-- Theme naval moderne -->
+        <link rel="stylesheet" type="text/css" href="../CSS/modern-naval.css" />
+        
+        <!-- Custom CSS -->
+        <link rel="stylesheet" type="text/css" href="../CSS/home.css" />
 
-    <!-- bootstrap-->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/css/bootstrap.min.css"
-        integrity="sha384-TX8t27EcRE3e/ihU7zmQxVncDAy5uIKz4rEkgIXeMed4M0jlfIDPvg6uqKI2xXr2" crossorigin="anonymous">
+        <!-- Socket.io -->
+        <script src="/socket.io/socket.io.js"></script>
+        
+        <!-- jQuery -->
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    </head>
 
-    <!-- include css-->
-    <link rel="stylesheet" type="text/css" href="../CSS/home.css" />
+    <body>
+        <!-- Effets visuels -->
+        <div class="grid-bg"></div>
+        <div class="radar-ping"></div>
+        <div class="scanline"></div>
 
-    <!-- include js-->
-    <script src="../JS/barHome.js"></script>
-
-    <!-- socket io-->
-    <script src="/socket.io/socket.io.js"></script>
-
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-</head>
-<!-- header -->
-<header>
-    <nav>
-        <nav class="navbar navbar-expand-sm navbar-dark">
-            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#collapsibleNavbar">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="collapsibleNavbar">
-                <ul class="navbar-nav">
-                    <!---Ajout d'un "bonjour pseudo"-->
-                    <li class="nav-item" id="bonjour">
-                        <a class="nav-link text-left">Bonjour <span id="username"></span> ! </a>
-                    </li>
-                    <li class="nav-item" id="jouer">
-                        <a class="nav-link text-left" href="waitingRoom">Jouer</a>
-                    </li>
-                    <li class="nav-item" id="lienLog">
-                        <a class="nav-link text-left" href="login">Se connecter</a>
-                    </li>
-                    <li class="nav-item" id="lienReg">
-                        <a class="nav-link text-left" href="register">Créer un compte</a>
-                    </li>
-                </ul>
-            </div>
-        </nav>
-    </nav>
-
-    <!-- Fond d'écran de l'accueil -->
-    <div>
-        <header class="masthead">
-        </header>
-    </div>
-
-    <!-- lancer les événements de scroll et de resize -->
-    <script>event.addEvent()</script>
-</header>
-
-<body>
-    <div class="main">
-        <div class="container">
-            <!-- Corps entre les bannières -->
-            <div class="row">
-                <!-- DIV de gauche [description du jeu] -->
-                <div class="col-md-8 bg-black text-secondary">
-                    <h3><img src="../Images/logo.png" class="icon mb-2 mr-1" />Bienvenue sur BattleCheap</h3>
-                    <a class="logo mr-3" href="/"></a>
-                    <p>Bienvenue sur BattleShip soldat, préparez-vous pour la guerre!</p>
-                    <p>Description du jeu:</p>
-                    <p>La bataille navale ou touché-coulé est un jeu de société commercialisé en 1831 qui se joue à deux
-                        soldats.
-                        Le principe du jeu, si vous ne le connaissez pas, est de placer des « navires » sur une grille
-                        tenue secrète et de tenter de couler les navires adverses.
-                        La partie s’arrête lorsque l’un des deux soldat a réussi à couler tous les navires de l’autre.
-                    </p>
-                    <p>Voici les navires :</p>
-
-                    <ul>
-                        <img src="../Images/ships/boat_5.png" class="navire" /> 1 porte-avion (5 cases)<br>
-                        <img src="../Images/ships/boat_1.png" class="navire" /> 1 croiseur (4 cases)<br>
-                        <img src="../Images/ships/boat_2.png" class="navire" /> 2 sous-marins (3 cases chacun)<br>
-                        <img src="../Images/ships/boat_3.png" class="navire" /> 1 torpilleur (2 cases)<br>
+        <!-- Navbar -->
+        <nav class="naval-navbar navbar navbar-expand-lg">
+            <div class="container">
+                <a class="navbar-brand" href="/">
+                    <img src="../Images/logo.png" alt="BattleCheap Logo" width="30" height="30" class="d-inline-block align-top me-2">
+                    BATTLECHEAP
+                </a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav ms-auto">
+                        <li class="nav-item" id="bonjour">
+                            <a class="nav-link">
+                                <i class="fas fa-user me-2"></i>Bonjour <span id="username"></span>
+                            </a>
+                        </li>
+                        <li class="nav-item" id="jouer">
+                            <a class="nav-link" href="game">
+                                <i class="fas fa-gamepad me-2"></i>JOUER
+                            </a>
+                        </li>
+                        <li class="nav-item" id="lienLog">
+                            <a class="nav-link" href="login">
+                                <i class="fas fa-sign-in-alt me-2"></i>CONNEXION
+                            </a>
+                        </li>
+                        <li class="nav-item" id="lienReg">
+                            <a class="nav-link" href="register">
+                                <i class="fas fa-user-plus me-2"></i>CRÉER UN COMPTE
+                            </a>
+                        </li>
                     </ul>
                 </div>
-
-                <!-- DIV de groite [explication de connexion] -->
-                <div class="col-md-4 bg-black text-secondary">
-                    <h3><img src="../Images/information.png" class="icon mb-2 mr-1" />Informations</h3>
-                    <p>Jouer à la Bataille Navale:</p>
-                    <p>1. Créer un compte</p>
-                    <p>2. Cliquer sur "Jouer"</p>
-                    <p>3. Attendre un adversaire et... LET'S BATTLE.</p>
-                </div>
-                <div class="col-sm-1"></div>
             </div>
-        </div>
-    </div>
+        </nav>
 
-    <!-- footer -->
-    <footer>
-        <p>BattleCheap de Djallal Maxime Enzo Aurelien et Steven CIR2</p>
-    </footer>
+        <!-- Main Content -->
+        <main class="container py-5">
+            <div class="row justify-content-center">
+                <div class="col-lg-10">
+                    <!-- Hero Section avec effet lumineux -->
+                    <div class="naval-card mb-5 position-relative">
+                        <div class="hero-glow" style="top: 50%; left: 20%; transform: translate(-50%, -50%);"></div>
+                        <div class="hero-glow" style="top: 30%; right: 10%; transform: translate(0, -50%);"></div>
+                        <div class="card-body text-center py-5">
+                            <h1 class="display-4 mb-4">BATTLE<span style="color: var(--accent);">CHEAP</span></h1>
+                            <p class="lead mb-4">Préparez votre flotte. Engagez l'ennemi. Survivez.</p>
+                            <a href="game" class="btn btn-naval btn-lg">
+                                <span>COMMENCER LA MISSION</span>
+                            </a>
+                        </div>
+                    </div>
 
-</body>
+                    <!-- Game Information -->
+                    <div class="row">
+                        <!-- Game Description -->
+                        <div class="col-md-8 mb-4">
+                            <div class="naval-card h-100">
+                                <div class="card-header">
+                                    <h3><i class="fas fa-ship me-2"></i>INFORMATIONS TACTIQUES</h3>
+                                </div>
+                                <div class="card-body">
+                                    <p>Bienvenue sur BattleCheap soldat, préparez-vous pour la guerre!</p>
+                                    
+                                    <p>La bataille navale est un jeu stratégique de placement et de destruction. Chaque joueur dispose d'une flotte qu'il doit positionner stratégiquement sur sa grille. À tour de rôle, les joueurs tirent sur la grille adverse pour tenter de toucher et couler les navires ennemis.</p>
+                                    
+                                    <p>La victoire est assurée lorsque tous les navires adverses sont coulés.</p>
+                                    
+                                    <h4 class="mt-4 mb-3">VOTRE FLOTTE:</h4>
+                                    <div class="row align-items-center mb-2">
+                                        <div class="col-auto">
+                                            <img src="../Images/ships/boat_5.png" class="img-fluid" style="max-height: 40px;" alt="Porte-avion">
+                                        </div>
+                                        <div class="col">
+                                            <div class="d-flex justify-content-between">
+                                                <span>Porte-avion</span>
+                                                <span class="text-end" style="color: var(--accent);">5 cases</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="row align-items-center mb-2">
+                                        <div class="col-auto">
+                                            <img src="../Images/ships/boat_1.png" class="img-fluid" style="max-height: 40px;" alt="Croiseur">
+                                        </div>
+                                        <div class="col">
+                                            <div class="d-flex justify-content-between">
+                                                <span>Croiseur</span>
+                                                <span class="text-end" style="color: var(--accent);">4 cases</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="row align-items-center mb-2">
+                                        <div class="col-auto">
+                                            <img src="../Images/ships/boat_2.png" class="img-fluid" style="max-height: 40px;" alt="Sous-marin">
+                                        </div>
+                                        <div class="col">
+                                            <div class="d-flex justify-content-between">
+                                                <span>Sous-marins (2)</span>
+                                                <span class="text-end" style="color: var(--accent);">3 cases chacun</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="row align-items-center">
+                                        <div class="col-auto">
+                                            <img src="../Images/ships/boat_3.png" class="img-fluid" style="max-height: 40px;" alt="Torpilleur">
+                                        </div>
+                                        <div class="col">
+                                            <div class="d-flex justify-content-between">
+                                                <span>Torpilleur</span>
+                                                <span class="text-end" style="color: var(--accent);">2 cases</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- How to Play -->
+                        <div class="col-md-4 mb-4">
+                            <div class="naval-card h-100">
+                                <div class="card-header">
+                                    <h3><i class="fas fa-info-circle me-2"></i>PROTOCOLE</h3>
+                                </div>
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center mb-4">
+                                        <div class="status-indicator status-active me-3"></div>
+                                        <h4 class="mb-0">COMMENT JOUER</h4>
+                                    </div>
+                                    
+                                    <ol class="list-unstyled">
+                                        <li class="mb-3">
+                                            <div class="d-flex">
+                                                <div>Créer un compte ou se connecter</div>
+                                            </div>
+                                        </li>
+                                        <li class="mb-3">
+                                            <div class="d-flex">
+                                                <div>Cliquer sur "JOUER" pour créer ou rejoindre une partie</div>
+                                            </div>
+                                        </li>
+                                        <li class="mb-3">
+                                            <div class="d-flex">
+                                                <div>Créer une salle ou rejoindre une salle avec un code</div>
+                                            </div>
+                                        </li>
+                                        <li>
+                                            <div class="d-flex">
+                                                <div>ENGAGER LE COMBAT</div>
+                                            </div>
+                                        </li>
+                                    </ol>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
 
-<script>let socket = io();</script>
-<script src="../JS/home.js"></script>
-<script src="../modules/logger.js"></script>
+        <!-- Footer -->
+        <footer class="py-4 text-center">
+            <div class="container">
+                <p class="mb-0">BattleCheap &copy; 2023 | Développé par Djallal, Maxime, Enzo, Aurelien et Steven | CIR2</p>
+            </div>
+        </footer>
 
+        <!-- Scripts -->
+        <script>
+            let socket = io();
+            
+            // Animation pour suivre le curseur avec un effet de lueur
+            document.addEventListener('mousemove', function(e) {
+                const glow = document.createElement('div');
+                glow.classList.add('cursor-glow');
+                glow.style.left = e.pageX + 'px';
+                glow.style.top = e.pageY + 'px';
+                document.body.appendChild(glow);
+                
+                setTimeout(() => {
+                    glow.remove();
+                }, 1000);
+            });
+        </script>
+        <script src="/node_modules/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+        <script src="../JS/barHome.js"></script>
+        <script src="../JS/home.js"></script>
+        <script src="../modules/logger.js"></script>
+    </body>
 </html>

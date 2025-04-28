@@ -1,67 +1,245 @@
-body{
+/* Importer les styles vintage communs */
+@import 'vintage.css';
+
+* {
     margin: 0;
     padding: 0;
-    background: url(../Images/login/1.jpg);
-  }
-  .signup-form{
-    width: 300px;
-    padding: 20px;
-    text-align: center;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Courier Prime', monospace;
+    color: var(--vintage-beige);
+    background: var(--vintage-beige) !important;
+    background-image: none !important;
+    position: relative;
+    overflow-x: hidden;
+}
+
+body::before {
+    content: "";
+    position: fixed;
+    background-color: var(--vintage-beige) !important;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    opacity: 0.2;
+    z-index: -1;
+}
+
+body::after {
+    content: "";
+    position: fixed;
+    bottom: 30px;
+    right: 40px;
+    width: 150px;
+    height: 150px;
+    background-image: url('../Images/ships/boat_2.png');
+    background-size: contain;
+    background-repeat: no-repeat;
+    opacity: 0.2;
+    transform: rotate(15deg);
+    z-index: -1;
+}
+
+.wrapper {
+    position: relative;
+    max-width: 500px;
+    margin: 50px auto;
+    padding: 30px;
+    background-color: rgba(245, 232, 214, 0.9);
+    border: var(--naval-border);
+    border-radius: var(--naval-border-radius);
+    box-shadow: var(--vintage-shadow);
+}
+
+.wrapper::before {
+    content: "";
     position: absolute;
-    top: 50%;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image: url('../Images/noise-texture.png');
+    opacity: 0.1;
+    pointer-events: none;
+    z-index: -1;
+}
+
+.wrapper h2 {
+    text-align: center;
+    margin-bottom: 30px;
+    font-family: 'Abril Fatface', serif;
+    color: var(--naval-blue);
+    text-shadow: 2px 2px 3px rgba(110, 136, 148, 0.3);
+    letter-spacing: 1px;
+    position: relative;
+}
+
+.wrapper h2::after {
+    content: "";
+    display: block;
+    width: 80%;
+    height: 3px;
+    background: var(--naval-blue);
+    position: absolute;
+    bottom: -10px;
+    left: 10%;
+    border-radius: 2px;
+}
+
+.wrapper h2::before {
+    content: "⚓";
+    position: absolute;
+    top: -30px;
     left: 50%;
-    transform: translate(-50%,-50%);
-    overflow: hidden;
-  }
-  .signup-form h1{
-    margin-top: 100px;
-    font-family: 'Permanent Marker', cursive;
-    color: #fff;
-    font-size: 40px;
-  }
-  .signup-form input{
+    transform: translateX(-50%);
+    font-size: 24px;
+    color: var(--naval-blue);
+}
+
+.input-field {
+    position: relative;
+    margin-bottom: 20px;
+}
+
+.input-field label {
+    display: block;
+    margin-bottom: 8px;
+    font-family: 'Special Elite', cursive;
+    font-size: 14px;
+    color: var(--naval-dark-blue);
+    letter-spacing: 1px;
+}
+
+.input-field input {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid var(--naval-blue);
+    border-radius: var(--naval-border-radius);
+    background-color: rgba(255, 255, 255, 0.7);
+    font-family: 'Courier Prime', monospace;
+    color: var(--vintage-dark);
+    font-size: 15px;
+    box-shadow: var(--vintage-inset);
+    transition: all 0.3s ease;
+}
+
+.input-field input:focus {
+    outline: none;
+    border-color: var(--naval-dark-blue);
+    box-shadow: 0 0 5px var(--naval-light-blue);
+}
+
+.btn {
     display: block;
     width: 100%;
-    padding: 0 16px;
-    height: 44px;
-    text-align: center;
-    box-sizing: border-box;
-    outline: none;
-    border: none;
-    font-family: "montserrat",sans-serif;
-  }
-
-  .signup-form ::placeholder{
-    color: black;
-  }
-
-  .txtb{
-    margin: 20px 0;
-    background: rgba(255,255,255,.5);
-    border-radius: 6px;
-  }
-  .signup-btn{
-    margin-top: 60px;
-    margin-bottom: 20px;
-    background: #071821;
-    color: #fff;
-    border-radius: 44px;
+    padding: 12px;
+    margin-top: 30px;
+    font-family: 'Special Elite', cursive;
+    background-color: var(--naval-blue);
+    color: var(--vintage-beige);
+    border: 2px solid var(--naval-dark-blue);
+    border-radius: var(--naval-border-radius);
     cursor: pointer;
-    transition: 0.8s;
-  }
-  .signup-btn:hover{
-    transform: scale(0.96);
-  }
-  .signup-form a{
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    font-size: 16px;
+    box-shadow: var(--vintage-shadow);
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.btn:hover {
+    background-color: var(--naval-dark-blue);
+    transform: translateY(-2px);
+}
+
+.btn:active {
+    transform: translateY(1px);
+    box-shadow: var(--vintage-inset);
+}
+
+.login-link {
+    margin-top: 20px;
+    text-align: center;
+}
+
+.login-link a {
+    color: var(--naval-dark-blue);
     text-decoration: none;
-    color: #fff;
-    font-family: "montserrat",sans-serif;
-    font-size: 14px;
-    padding: 10px;
-    transition: 0.8s;
+    font-family: 'Special Elite', cursive;
+    position: relative;
+    font-weight: bold;
+}
+
+.login-link a::after {
+    content: "";
+    position: absolute;
+    width: 100%;
+    height: 1px;
+    bottom: -2px;
+    left: 0;
+    background-color: var(--naval-dark-blue);
+    transform: scaleX(0);
+    transition: transform 0.3s ease;
+}
+
+.login-link a:hover::after {
+    transform: scaleX(1);
+}
+
+#registration-error {
     display: block;
-  }
-  .signup-form a:hover{
-    background: rgba(0,0,0,.3);
-  }
-  
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    margin-top: 15px;
+    background-color: var(--naval-compass);
+    border: 2px dashed var(--naval-blue);
+    padding: 10px 15px;
+    font-family: 'Special Elite', cursive;
+    position: relative;
+    box-shadow: var(--vintage-shadow);
+    color: var(--naval-dark-blue);
+    opacity: 0;
+    transition: opacity 0.3s ease-in;
+}
+
+#registration-error:not(:empty) {
+    opacity: 1;
+}
+
+/* Ajout d'un effet de timbre vintage */
+.wrapper::after {
+    content: "";
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 80px;
+    height: 80px;
+    background-image: url('../Images/ships/boat_3.png');
+    background-size: contain;
+    background-repeat: no-repeat;
+    opacity: 0.3;
+    transform: rotate(15deg);
+    pointer-events: none;
+}
+
+/* Responsive design */
+@media screen and (max-width: 576px) {
+    .wrapper {
+        width: 90%;
+        padding: 20px;
+    }
+    
+    .wrapper h2 {
+        font-size: 1.5rem;
+    }
+    
+    .wrapper::after {
+        width: 60px;
+        height: 60px;
+    }
+}

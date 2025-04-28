@@ -1,116 +1,76 @@
 <!DOCTYPE html>
-<html>
+<html lang="fr">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>BattleCheap - Le jeu</title>
+        <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+        <link rel="stylesheet" href="../CSS/game.css">
+    </head>
 
-<head>
-    <title>BattleCheap</title>
-    <script src="/socket.io/socket.io.js"></script>
-    <meta charset="UTF-8">
-    <link rel="stylesheet" href="/css/site.css">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-</head>
-
-<body>
-    <div class="main">
-        <h1 class="main-heading">
-            <span class="main-heading-primary">BattleCheap</span>
-            <span class="main-heading-secondary">sink the ships!</span>
-            <span class="main-heading-multi">1 vs. 1</span>
-        </h1>
-    </div>
-    <div class="container">
-        <div class="row vertical-center-row">
-            <div class="col-md-12">
-
-                <!-- Disconnected from server -->
-                <div id="disconnected">
-                    <div class="row">
-                        <div class="col-sm-4 col-sm-offset-4">
-                            <div class="alert alert-danger">
-                                <p>Non connecté</p>
-                            </div>
-                        </div>
-                    </div>
+    <body>
+        <div class="container">
+            <!-- Salle d'attente -->
+            <div id="waiting-room">
+                <h1>BattleCheap</h1>
+                
+                <div class="create-game-container">
+                    <h3>Créer une nouvelle partie</h3>
+                    <button id="create-btn" class="btn">Créer une salle</button>
                 </div>
 
-                <!-- Waiting room -->
-                <div id="waiting-room" style="display:none;">
-                    <div class="row">
-                        <div class="col-sm-4 col-sm-offset-4">
-                            <div class="panel panel-primary">
-                                <div class="panel-header">
-                                    <h2>Bienvenue dans la salle d'attente !</h2>
-                                </div>
-                                <div class="panel-body">
-                                    <p>Vous êtes connecté au serveur.</p>
-                                    <p>En attente d'autres joueurs...</p>
-                                </div>
-                            </div>
-                        </div>
+                <div class="room-code-container" style="display: none;">
+                    <p>Votre code de salle :</p>
+                    <div id="room-code">------</div>
+                    <p>Partagez ce code avec un ami pour qu'il puisse vous rejoindre</p>
+                    <div class="status-message">En attente d'un adversaire...</div>
+                </div>
+                
+                <div class="join-container">
+                    <h3>Rejoindre une partie existante</h3>
+                    <div class="input-group">
+                        <input type="text" id="join-code" placeholder="Entrez le code de salle">
+                        <button id="join-btn" class="btn">Rejoindre</button>
                     </div>
                 </div>
-
-                <!-- Game -->
-                <div id="game" style="display:none;">
-                    <div class="row">
-                        <!-- Status -->
-                        <div class="list-group-item" id="turn-status"></div>
-                        <div class="col-md-12">
-                            <div class="panel panel-primary">
-                                <div class="panel-body">
-
-                                    <!-- Player grids -->
-                                    <div class="row" id="gamefield">
-                                        <div id="line-left" class="col-md-6 player-grid text-center">
-                                            <h3>TA FLOTTE DE GUERRE</h3>
-                                            <canvas id="canvas-grid1" width="361" height="361">Ton navigateur ne
-                                                supporte pas le Canvas</canvas>
-                                        </div>
-                                        <div id="line-right" class="col-md-6 player-grid text-center">
-                                            <h3>FLOTTE DE GUERRE ENNEMIE</h3>
-                                            <canvas id="canvas-grid2" width="361" height="361">Ton navigateur ne
-                                                supporte pas le Canvas</canvas>
-                                        </div>
-                                    </div>
-
-
-                                </div>
-                                <div class="panel-heading">Server Room: <span id="game-number"></span></div>
-                                <ul class="list-group">
-
-                                    <!-- Chat messages -->
-                                    <li class="list-group-item" id="messages-list">
-                                        <ul id="messages"></ul>
-                                    </li>
-
-                                    <!-- Send chat message form -->
-                                    <li class="list-group-item">
-                                        <form id="message-form" action="">
-                                            <p>Écris ton message !</p>
-                                            <div class="input-group">
-                                                <input id="message" class="form-control" autocomplete="off" />
-                                                <div class="input-group-btn">
-                                                    <button class="btn btn-primary">Send</button>
-                                                </div>
-                                            </div>
-                                        </form>
-                                    </li>
-                                </ul>
-
-                            </div>
-                        </div>
+            </div>
+            
+            <!-- Conteneur du jeu (caché au début) -->
+            <div id="game-container" style="display: none;">
+                <!-- Alerte de statut du jeu -->
+                <div id="game-status" class="alert alert-waiting">En attente de l'adversaire...</div>
+                
+                <!-- Grilles de jeu -->
+                <div class="game-boards">
+                    <div class="board">
+                        <h2>Votre flotte</h2>
+                        <canvas id="my-grid" width="400" height="400"></canvas>
+                    </div>
+                    
+                    <div class="board">
+                        <h2>Flotte ennemie</h2>
+                        <canvas id="opponent-grid" width="400" height="400"></canvas>
                     </div>
                 </div>
-
+                
+                <!-- Chat de jeu -->
+                <div id="chat-container">
+                    <div id="chat-messages"></div>
+                    <div class="chat-input-container">
+                        <input type="text" id="chat-input" placeholder="Envoyez un message...">
+                        <button id="chat-send" class="btn">Envoyer</button>
+                    </div>
+                </div>
+                
+                <!-- Bouton quitter -->
+                <div class="game-footer">
+                    <button id="leave-game" class="btn">Quitter la partie</button>
+                </div>
             </div>
         </div>
-    </div>
-
-    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
-    <script type="text/javascript"
-        src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.4/js/bootstrap.min.js"></script>
-    <script>let socket = io();</script>
-    <script type="text/javascript" src="../JS/game.js"></script>
-    <script type="text/javascript" src="../JS/client.js"></script>
-</body>
-
+        
+        <!-- Bibliothèques -->
+        <script src="/socket.io/socket.io.js"></script>
+        <script src="../JS/game.js"></script>
+    </body>
 </html>

@@ -24,5 +24,5 @@ let event = (function () {
             const ul = document.getElementsByTagName('ul');
             const logo = document.getElementsByClassName('logo');
         },
-    }
+    };
 })();
