@@ -15,19 +15,19 @@ const Register = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!email || !password || !confirmPassword || !username) {
       return setError('Veuillez remplir tous les champs');
     }
-    
+
     if (password !== confirmPassword) {
       return setError('Les mots de passe ne correspondent pas');
     }
-    
+
     if (password.length < 6) {
       return setError('Le mot de passe doit contenir au moins 6 caractères');
     }
-    
+
     try {
       setError('');
       setLoading(true);
@@ -35,7 +35,7 @@ const Register = () => {
       navigate('/');
     } catch (error) {
       console.error('Erreur d\'inscription:', error);
-      
+
       if (error.code === 'auth/email-already-in-use') {
         setError('Cet email est déjà utilisé');
       } else {
@@ -49,23 +49,19 @@ const Register = () => {
   return (
     <div>
       <Header />
-      
-      <main className="container" style={{ marginTop: '2rem' }}>
-        <div style={{ 
-          maxWidth: '400px', 
-          margin: '2rem auto', 
-          padding: '2rem',
-          backgroundColor: 'white',
-          borderRadius: '8px',
-          boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
-        }}>
-          <h1 className="text-center">Inscription</h1>
-          
+
+      <main className="container" style={{ marginTop: '4rem', display: 'flex', justifyContent: 'center' }}>
+        <div className="tactical-panel" style={{ width: '100%', maxWidth: '450px' }}>
+          <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+            <h2 style={{ color: 'var(--nav-teal)', margin: 0 }}>NEW OPERATOR</h2>
+            <div className="mono" style={{ color: 'var(--nav-slate)', fontSize: '0.8rem' }}>CREATE SECURE PROFILE</div>
+          </div>
+
           {error && <div className="alert alert-danger">{error}</div>}
-          
+
           <form onSubmit={handleSubmit}>
             <div className="mb-3">
-              <label htmlFor="username" className="form-label">Nom d'utilisateur</label>
+              <label htmlFor="username" className="mono" style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--nav-text)' }}>OPERATOR ALIAS</label>
               <input
                 type="text"
                 className="form-control"
@@ -73,11 +69,13 @@ const Register = () => {
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 required
+                autoComplete="username"
+                placeholder="ENTER USERNAME"
               />
             </div>
-            
+
             <div className="mb-3">
-              <label htmlFor="email" className="form-label">Email</label>
+              <label htmlFor="email" className="mono" style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--nav-text)' }}>EMAIL ADDRESS</label>
               <input
                 type="email"
                 className="form-control"
@@ -85,11 +83,13 @@ const Register = () => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
+                autoComplete="email"
+                placeholder="ENTER EMAIL"
               />
             </div>
-            
+
             <div className="mb-3">
-              <label htmlFor="password" className="form-label">Mot de passe</label>
+              <label htmlFor="password" className="mono" style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--nav-text)' }}>PASSWORD</label>
               <input
                 type="password"
                 className="form-control"
@@ -97,11 +97,13 @@ const Register = () => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
+                autoComplete="new-password"
+                placeholder="CREATE PASSWORD"
               />
             </div>
-            
+
             <div className="mb-3">
-              <label htmlFor="confirmPassword" className="form-label">Confirmer le mot de passe</label>
+              <label htmlFor="confirmPassword" className="mono" style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--nav-text)' }}>CONFIRM PASSWORD</label>
               <input
                 type="password"
                 className="form-control"
@@ -109,26 +111,29 @@ const Register = () => {
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
+                autoComplete="new-password"
+                placeholder="REPEAT PASSWORD"
               />
             </div>
-            
-            <button 
-              type="submit" 
-              className="btn btn-primary" 
-              style={{ width: '100%' }}
+
+            <button
+              type="submit"
+              className="btn btn-primary"
+              style={{ width: '100%', marginTop: '1rem' }}
               disabled={loading}
             >
-              {loading ? 'Inscription en cours...' : 'S\'inscrire'}
+              {loading ? 'REGISTERING...' : 'CONFIRM CREDENTIALS'}
             </button>
           </form>
-          
-          <p className="text-center mt-3">
-            Vous avez déjà un compte ? <Link to="/login">Connectez-vous</Link>
-          </p>
+
+          <div className="text-center mt-3" style={{ borderTop: '1px solid var(--nav-lighter)', paddingTop: '1rem', marginTop: '2rem' }}>
+            <span style={{ color: 'var(--nav-slate)', fontSize: '0.9rem' }}>ALREADY REGISTERED? </span>
+            <Link to="/login" style={{ color: 'var(--nav-teal)', textDecoration: 'none', fontWeight: 'bold' }}>ACCESS LOGIN</Link>
+          </div>
         </div>
       </main>
     </div>
   );
 };
 
-export default Register; 
+export default Register;

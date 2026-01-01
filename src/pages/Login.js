@@ -13,11 +13,11 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!email || !password) {
       return setError('Veuillez remplir tous les champs');
     }
-    
+
     try {
       setError('');
       setLoading(true);
@@ -38,23 +38,19 @@ const Login = () => {
   return (
     <div>
       <Header />
-      
-      <main className="container" style={{ marginTop: '2rem' }}>
-        <div style={{ 
-          maxWidth: '400px', 
-          margin: '2rem auto', 
-          padding: '2rem',
-          backgroundColor: 'white',
-          borderRadius: '8px',
-          boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
-        }}>
-          <h1 className="text-center">Connexion</h1>
-          
+
+      <main className="container" style={{ marginTop: '4rem', display: 'flex', justifyContent: 'center' }}>
+        <div className="tactical-panel" style={{ width: '100%', maxWidth: '450px' }}>
+          <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+            <h2 style={{ color: 'var(--nav-teal)', margin: 0 }}>ACCESS CONTROL</h2>
+            <div className="mono" style={{ color: 'var(--nav-slate)', fontSize: '0.8rem' }}>SECURE LOGIN REQUIRED</div>
+          </div>
+
           {error && <div className="alert alert-danger">{error}</div>}
-          
+
           <form onSubmit={handleSubmit}>
             <div className="mb-3">
-              <label htmlFor="email" className="form-label">Email</label>
+              <label htmlFor="email" className="mono" style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--nav-text)' }}>EMAIL CREDENTIALS</label>
               <input
                 type="email"
                 className="form-control"
@@ -62,11 +58,13 @@ const Login = () => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
+                autoComplete="email"
+                placeholder="ENTER EMAIL"
               />
             </div>
-            
+
             <div className="mb-3">
-              <label htmlFor="password" className="form-label">Mot de passe</label>
+              <label htmlFor="password" className="mono" style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--nav-text)' }}>SECURITY CODE</label>
               <input
                 type="password"
                 className="form-control"
@@ -74,26 +72,29 @@ const Login = () => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
+                autoComplete="current-password"
+                placeholder="ENTER PASSWORD"
               />
             </div>
-            
-            <button 
-              type="submit" 
-              className="btn btn-primary" 
-              style={{ width: '100%' }}
+
+            <button
+              type="submit"
+              className="btn btn-primary"
+              style={{ width: '100%', marginTop: '1rem' }}
               disabled={loading}
             >
-              {loading ? 'Connexion en cours...' : 'Se connecter'}
+              {loading ? 'AUTHENTICATING...' : 'ESTABLISH LINK'}
             </button>
           </form>
-          
-          <p className="text-center mt-3">
-            Vous n'avez pas de compte ? <Link to="/register">Inscrivez-vous</Link>
-          </p>
+
+          <div className="text-center mt-3" style={{ borderTop: '1px solid var(--nav-lighter)', paddingTop: '1rem', marginTop: '2rem' }}>
+            <span style={{ color: 'var(--nav-slate)', fontSize: '0.9rem' }}>NO CREDENTIALS? </span>
+            <Link to="/register" style={{ color: 'var(--nav-teal)', textDecoration: 'none', fontWeight: 'bold' }}>INITIATE REGISTRATION</Link>
+          </div>
         </div>
       </main>
     </div>
   );
 };
 
-export default Login; 
+export default Login;

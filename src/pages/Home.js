@@ -1,151 +1,159 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
 import { useSocket } from '../hooks/useSocket';
+import { useAuth } from '../context/AuthContext';
 import Header from '../components/Header';
 
 const Home = () => {
   const [roomId, setRoomId] = useState('');
   const [joinRoomId, setJoinRoomId] = useState('');
   const [error, setError] = useState('');
-  const { currentUser } = useAuth();
-  const { emit, on, isConnected, error: socketError } = useSocket();
   const navigate = useNavigate();
+  const { isConnected, emit, on, off, socketError } = useSocket();
+  const { currentUser } = useAuth();
 
-  // S'abonner aux événements socket
-  React.useEffect(() => {
-    if (!isConnected) return;
-
-    const unsubscribeRoomCreated = on('roomCreated', ({ roomId }) => {
+  useEffect(() => {
+    // Écouter la confirmation de création de salle
+    const handleRoomCreated = ({ roomId }) => {
       navigate(`/game/${roomId}`);
-    });
+    };
 
-    const unsubscribeRoomJoined = on('roomJoined', ({ roomId }) => {
+    // Écouter la confirmation pour rejoindre une salle
+    const handleRoomJoined = ({ roomId }) => {
       navigate(`/game/${roomId}`);
-    });
+    };
 
-    const unsubscribeRoomNotFound = on('roomNotFound', () => {
-      setError('Salle introuvable.');
-    });
+    // Écouter les erreurs
+    const handleError = (message) => {
+      setError(message);
+    };
 
-    const unsubscribeRoomFull = on('roomFull', () => {
-      setError('Cette salle est pleine.');
-    });
+    const handleRoomFull = () => {
+      setError('Cette salle est pleine');
+    };
+
+    const handleRoomNotFound = () => {
+      setError('Salle introuvable');
+    };
+
+    if (isConnected) {
+      on('roomCreated', handleRoomCreated);
+      on('roomJoined', handleRoomJoined);
+      on('error', handleError);
+      on('roomFull', handleRoomFull);
+      on('roomNotFound', handleRoomNotFound);
+    }
 
     return () => {
-      unsubscribeRoomCreated();
-      unsubscribeRoomJoined();
-      unsubscribeRoomNotFound();
-      unsubscribeRoomFull();
+      if (isConnected) {
+        off('roomCreated', handleRoomCreated);
+        off('roomJoined', handleRoomJoined);
+        off('error', handleError);
+        off('roomFull', handleRoomFull);
+        off('roomNotFound', handleRoomNotFound);
+      }
     };
-  }, [isConnected, on, navigate]);
+  }, [navigate, isConnected, on, off]);
 
-  // Générer un ID aléatoire pour la salle
-  const generateRoomId = () => {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    let result = '';
-    for (let i = 0; i < 6; i++) {
-      result += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    return result;
-  };
-
-  // Créer une nouvelle salle
   const handleCreateRoom = () => {
-    const newRoomId = roomId || generateRoomId();
-    
-    if (currentUser) {
-      emit('createRoom', { 
-        roomId: newRoomId,
-        username: currentUser.displayName || currentUser.email
-      });
-    } else {
-      navigate('/login');
-    }
+    setError('');
+    const newRoomId = roomId || Math.random().toString(36).substring(2, 8).toUpperCase();
+
+    // Utiliser le nom de l'utilisateur ou son email s'il est connecté
+    const username = currentUser ? (currentUser.displayName || currentUser.email) : 'Joueur 1';
+
+    emit('createRoom', { roomId: newRoomId, username });
   };
 
-  // Rejoindre une salle existante
   const handleJoinRoom = () => {
+    setError('');
     if (!joinRoomId) {
-      setError('Veuillez entrer un code de salle.');
+      setError('Veuillez entrer un code de salle');
       return;
     }
-    
-    if (currentUser) {
-      emit('joinRoom', { 
-        roomId: joinRoomId,
-        username: currentUser.displayName || currentUser.email
-      });
-    } else {
-      navigate('/login');
-    }
+
+    // Utiliser le nom de l'utilisateur ou son email s'il est connecté
+    const username = currentUser ? (currentUser.displayName || currentUser.email) : 'Joueur 2';
+
+    emit('joinRoom', { roomId: joinRoomId, username });
   };
 
   return (
     <div>
       <Header />
-      
-      <main className="container" style={{ marginTop: '2rem' }}>
-        <h1 className="text-center">BattleCheap</h1>
-        <p className="text-center">Un jeu de bataille navale en ligne</p>
-        
+
+      <main className="container" style={{ marginTop: '4rem' }}>
+        <div style={{ textAlign: 'center', marginBottom: '4rem' }}>
+          <div style={{ letterSpacing: '4px', color: 'var(--nav-teal)', marginBottom: '1rem', fontSize: '0.9rem' }} className="mono">
+            {/* UNIFIED NAVAL COMMAND SYSTEM */}
+            UNIFIED NAVAL COMMAND SYSTEM
+          </div>
+          <h1 style={{ fontSize: '4rem', margin: 0 }}>BATTLECHEAP</h1>
+          <p className="mono" style={{ color: 'var(--nav-slate)', marginTop: '0.5rem' }}>
+            SECURE TACTICAL UPLINK v2.0
+          </p>
+        </div>
+
         {(error || socketError) && (
           <div className="alert alert-danger">{error || socketError}</div>
         )}
-        
-        <div style={{ 
-          maxWidth: '500px', 
-          margin: '2rem auto', 
-          padding: '2rem',
-          backgroundColor: 'white',
-          borderRadius: '8px',
-          boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
-        }}>
-          <h2 className="text-center">Créer une partie</h2>
-          <div style={{ marginBottom: '1rem' }}>
-            <input
-              type="text"
-              className="form-control"
-              placeholder="Code de salle (laissez vide pour générer automatiquement)"
-              value={roomId}
-              onChange={(e) => setRoomId(e.target.value.toUpperCase())}
-              maxLength={6}
-            />
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'minmax(300px, 1fr) minmax(300px, 1fr)', gap: '2rem', maxWidth: '900px', margin: '0 auto' }}>
+          {/* Create Room Panel */}
+          <div className="tactical-panel">
+            <h3 className="text-center" style={{ color: 'var(--nav-teal)', marginBottom: '1.5rem', borderBottom: '1px solid rgba(100, 255, 218, 0.1)', paddingBottom: '1rem' }}>
+              INITIALIZE OPERATION
+            </h3>
+            <div style={{ marginBottom: '1.5rem' }}>
+              <label className="mono" style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--nav-slate)', fontSize: '0.8rem' }}>MISSION ID [OPTIONAL]</label>
+              <input
+                type="text"
+                className="form-control"
+                placeholder="AUTO-GENERATE"
+                value={roomId}
+                onChange={(e) => setRoomId(e.target.value.toUpperCase())}
+                maxLength={6}
+              />
+            </div>
+            <button
+              className="btn btn-primary"
+              style={{ width: '100%' }}
+              onClick={handleCreateRoom}
+              disabled={!isConnected}
+            >
+              CREATE LOBBY
+            </button>
           </div>
-          <button 
-            className="btn btn-primary" 
-            style={{ width: '100%' }}
-            onClick={handleCreateRoom}
-            disabled={!isConnected}
-          >
-            Créer une partie
-          </button>
-          
-          <hr style={{ margin: '2rem 0' }} />
-          
-          <h2 className="text-center">Rejoindre une partie</h2>
-          <div style={{ marginBottom: '1rem' }}>
-            <input
-              type="text"
-              className="form-control"
-              placeholder="Entrez le code de salle"
-              value={joinRoomId}
-              onChange={(e) => setJoinRoomId(e.target.value.toUpperCase())}
-              maxLength={6}
-            />
+
+          {/* Join Room Panel */}
+          <div className="tactical-panel">
+            <h3 className="text-center" style={{ color: 'var(--nav-text)', marginBottom: '1.5rem', borderBottom: '1px solid rgba(255, 255, 255, 0.1)', paddingBottom: '1rem' }}>
+              JOIN EXISTING FRONT
+            </h3>
+            <div style={{ marginBottom: '1.5rem' }}>
+              <label className="mono" style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--nav-slate)', fontSize: '0.8rem' }}>COORDINATES [ROOM ID]</label>
+              <input
+                type="text"
+                className="form-control"
+                placeholder="ENTER CODE"
+                value={joinRoomId}
+                onChange={(e) => setJoinRoomId(e.target.value.toUpperCase())}
+                maxLength={6}
+              />
+            </div>
+            <button
+              className="btn btn-secondary"
+              style={{ width: '100%' }}
+              onClick={handleJoinRoom}
+              disabled={!isConnected}
+            >
+              CONNECT
+            </button>
           </div>
-          <button 
-            className="btn btn-secondary" 
-            style={{ width: '100%' }}
-            onClick={handleJoinRoom}
-            disabled={!isConnected}
-          >
-            Rejoindre une partie
-          </button>
         </div>
       </main>
     </div>
   );
 };
 
-export default Home; 
+export default Home;

@@ -16,27 +16,31 @@ const Header = () => {
   };
 
   return (
-    <header className="navbar" style={{ padding: '1rem', backgroundColor: '#333', color: 'white' }}>
+    <header className="navbar">
       <div className="container" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Link to="/" style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'white' }}>
-          BattleCheap
+        <Link to="/" className="logo">
+          <span>BATTLE</span>CHEAP
         </Link>
-        
+
         <nav>
           {currentUser ? (
             <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-              <span>Bonjour, {currentUser.displayName || currentUser.email}</span>
-              <button 
+              <div style={{ textAlign: 'right', fontSize: '0.8rem', marginRight: '1rem' }}>
+                <div style={{ color: 'var(--nav-slate)' }}>OPERATOR_ID</div>
+                <div className="mono" style={{ color: 'var(--nav-teal)' }}>{currentUser.displayName || currentUser.email || 'UNIDENTIFIED'}</div>
+              </div>
+              <button
                 onClick={handleLogout}
                 className="btn btn-secondary"
+                style={{ padding: '0.5rem 1rem', fontSize: '0.8rem' }}
               >
-                Déconnexion
+                LOGOUT
               </button>
             </div>
           ) : (
             <div style={{ display: 'flex', gap: '1rem' }}>
-              <Link to="/login" className="btn btn-primary">Connexion</Link>
-              <Link to="/register" className="btn btn-secondary">Inscription</Link>
+              <Link to="/login" className="btn btn-primary" style={{ padding: '0.5rem 1.5rem', textDecoration: 'none' }}>LOGIN</Link>
+              <Link to="/register" className="btn btn-secondary" style={{ padding: '0.5rem 1.5rem', textDecoration: 'none' }}>REGISTER</Link>
             </div>
           )}
         </nav>
@@ -45,4 +49,4 @@ const Header = () => {
   );
 };
 
-export default Header; 
+export default Header;

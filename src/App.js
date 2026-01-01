@@ -1,6 +1,7 @@
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
+import { SocketProvider } from './context/SocketContext';
 import PrivateRoute from './components/PrivateRoute';
 
 // Pages
@@ -16,19 +17,21 @@ import './App.css';
 function App() {
   return (
     <AuthProvider>
-      <div className="App">
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/game/:roomId" element={
-            <PrivateRoute>
-              <Game />
-            </PrivateRoute>
-          } />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </div>
+      <SocketProvider>
+        <div className="App">
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/game/:roomId" element={
+              <PrivateRoute>
+                <Game />
+              </PrivateRoute>
+            } />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </div>
+      </SocketProvider>
     </AuthProvider>
   );
 }
