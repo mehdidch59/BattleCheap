@@ -30,7 +30,7 @@
         "server": "node server.js",
         "dev": "concurrently \"npm run server\" \"npm run start\"",
         "predeploy": "npm run build",
-        "deploy": "gh-pages -d build"
+        "deploy": "gh-pages -d build --cname battlecheap.mehdichafai.me"
     },
     "eslintConfig": {
         "extends": [
