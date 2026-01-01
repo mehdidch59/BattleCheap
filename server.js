@@ -12,7 +12,7 @@ const io = new Server(server, {
   cors: {
     // On autorise ton sous-domaine en production, localhost en développement
     origin: process.env.NODE_ENV === 'production'
-      ? "https://mehdichafai.me"
+      ? "https://battlecheap.mehdichafai.me"
       : ["http://localhost:3000"],
     methods: ["GET", "POST"]
   }
