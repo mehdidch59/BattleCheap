@@ -118,7 +118,7 @@ io.on('connection', (socket) => {
     }
   });
 
-  // Joueur prêt
+  // Joueur prêt (bateaux placés)
   socket.on('playerReady', (boardData) => {
     if (!users[socket.id] || !users[socket.id].roomId) return;
     const { roomId, playerId } = users[socket.id];
@@ -139,6 +139,19 @@ io.on('connection', (socket) => {
     } else {
       socket.to(roomId).emit('playerIsReady', { playerId });
     }
+  });
+
+  // Chat : Envoi de message
+  socket.on('sendMessage', ({ message }) => {
+    if (!users[socket.id] || !users[socket.id].roomId) return;
+    const { roomId, username } = users[socket.id];
+
+    // Diffuser le message à toute la salle (y compris l'expéditeur)
+    io.to(roomId).emit('receiveMessage', {
+      sender: username,
+      text: message,
+      timestamp: new Date().toISOString()
+    });
   });
 
   // Action de tir

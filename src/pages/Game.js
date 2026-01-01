@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Board from '../components/Board';
 import ShipPlacement from '../components/ShipPlacement';
+import Chat from '../components/Chat';
 import { useSocket } from '../hooks/useSocket';
 import { useAuth } from '../context/AuthContext';
 import Header from '../components/Header';
@@ -212,9 +213,12 @@ const Game = () => {
               )}
             </div>
           )}
+
+          {/* Chat Module */}
+          {isConnected && <Chat />}
         </div>
-      </main>
-    </div>
+      </main >
+    </div >
   );
 };
 
