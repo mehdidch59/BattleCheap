@@ -1,15 +1,15 @@
 {
   "files": {
     "main.css": "/BattleCheap/static/css/main.1f3de878.css",
-    "main.js": "/BattleCheap/static/js/main.ef9eb18c.js",
+    "main.js": "/BattleCheap/static/js/main.9e18ae44.js",
     "static/js/453.9f570096.chunk.js": "/BattleCheap/static/js/453.9f570096.chunk.js",
     "index.html": "/BattleCheap/index.html",
     "main.1f3de878.css.map": "/BattleCheap/static/css/main.1f3de878.css.map",
-    "main.ef9eb18c.js.map": "/BattleCheap/static/js/main.ef9eb18c.js.map",
+    "main.9e18ae44.js.map": "/BattleCheap/static/js/main.9e18ae44.js.map",
     "453.9f570096.chunk.js.map": "/BattleCheap/static/js/453.9f570096.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.1f3de878.css",
-    "static/js/main.ef9eb18c.js"
+    "static/js/main.9e18ae44.js"
   ]
 }
