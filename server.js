@@ -26,7 +26,7 @@ if (process.env.NODE_ENV === 'production') {
   // On s'assure que le chemin vers 'build' est correct par rapport à la racine
   app.use(express.static(path.join(__dirname, 'build')));
 
-  app.get('/*', (req, res) => {
+  app.get(/^(?!\/socket\.io\/).*$/, (req, res) => {
     res.sendFile(path.join(__dirname, 'build', 'index.html'));
   });
 }
