@@ -5,7 +5,7 @@ const SocketContext = createContext();
 
 // Pour GitHub Pages, nous aurons besoin d'une URL de serveur externe
 const SERVER_URL = process.env.NODE_ENV === 'production'
-    ? process.env.REACT_APP_SERVER_URL || 'https://votre-serveur-backend.herokuapp.com'
+    ? 'https://battlecheap.onrender.com'
     : `http://localhost:${process.env.REACT_APP_PORT || 5000}`;
 
 export function useSocketContext() {
@@ -25,7 +25,7 @@ export function SocketProvider({ children }) {
                 reconnection: true,
                 reconnectionAttempts: 5,
                 reconnectionDelay: 1000,
-                transports: ['websocket', 'polling'] // Force websocket first
+                transports: ['websocket'] // Force websocket pour éviter les erreurs Render
             });
 
             socketRef.current = socket;
