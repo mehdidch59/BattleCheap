@@ -6,9 +6,15 @@ const { Server } = require('socket.io');
 // Initialisation
 const app = express();
 const server = http.createServer(app);
+
+// MODIFICATION : Configuration CORS sécurisée
 const io = new Server(server, {
   cors: {
-    origin: process.env.NODE_ENV === 'production' ? false : ["http://localhost:3000"]
+    // On autorise ton sous-domaine en production, localhost en développement
+    origin: process.env.NODE_ENV === 'production'
+      ? "https://mehdichafai.me"
+      : ["http://localhost:3000"],
+    methods: ["GET", "POST"]
   }
 });
 
@@ -17,6 +23,7 @@ app.use(express.json());
 
 // En production, servir les fichiers statiques depuis le répertoire build
 if (process.env.NODE_ENV === 'production') {
+  // On s'assure que le chemin vers 'build' est correct par rapport à la racine
   app.use(express.static(path.join(__dirname, 'build')));
 
   app.get('*', (req, res) => {
@@ -41,7 +48,6 @@ io.on('connection', (socket) => {
       return;
     }
 
-    // Créer la nouvelle salle
     rooms[roomId] = {
       id: roomId,
       players: [socket.id],
@@ -55,82 +61,56 @@ io.on('connection', (socket) => {
       }
     };
 
-    // Faire rejoindre cette salle au socket
     socket.join(roomId);
 
-    // Enregistrer les infos utilisateur
     users[socket.id] = {
       roomId: roomId,
       playerId: 0,
       username: username || 'Joueur 1'
     };
 
-    // Envoyer l'ID de salle au créateur
     socket.emit('roomCreated', { roomId, playerId: 0 });
   });
 
   // Rejoindre une salle
   socket.on('joinRoom', ({ roomId, username }) => {
-    console.log(`Tentative de rejoindre la salle: ${roomId} par ${username} (${socket.id})`);
+    console.log(`Tentative de rejoindre la salle: ${roomId} par ${username}`);
 
-    // Vérifier si la salle existe
     if (!rooms[roomId]) {
       socket.emit('roomNotFound');
       return;
     }
 
-    // Vérifier si le joueur est déjà dans la salle
     if (rooms[roomId].players.includes(socket.id)) {
-      console.log(`Joueur ${username} déjà dans la salle ${roomId}`);
       const playerId = rooms[roomId].players.indexOf(socket.id);
-
-      // Mettre à jour le username si besoin
       users[socket.id] = {
         roomId: roomId,
         playerId: playerId,
         username: username || users[socket.id]?.username || 'Joueur'
       };
-
       socket.emit('roomJoined', { roomId, playerId });
-
-      // Si l'adversaire est déjà là, on renvoie l'info
-      const opponentId = playerId === 0 ? 1 : 0;
-      if (rooms[roomId].players[opponentId]) {
-        const opponentSocketId = rooms[roomId].players[opponentId];
-        const opponentName = users[opponentSocketId]?.username;
-        if (opponentName) {
-          socket.emit('playerJoined', { username: opponentName });
-        }
-      }
       return;
     }
 
-    // Vérifier si la salle est pleine
     if (rooms[roomId].players.length >= 2) {
       socket.emit('roomFull');
       return;
     }
 
-    // Rejoindre la salle
     rooms[roomId].players.push(socket.id);
     socket.join(roomId);
 
-    // Enregistrer les infos utilisateur
     users[socket.id] = {
       roomId: roomId,
-      playerId: 1, // Si on arrive ici, on est forcément le 2ème (index 1) car createRoom met le premier, et le check duplicate gère le rejoin
+      playerId: 1,
       username: username || 'Joueur 2'
     };
 
-    // Notifier les deux joueurs
     socket.emit('roomJoined', { roomId, playerId: 1 });
-
-    // Notifier le créateur qu'un joueur a rejoint
     io.to(rooms[roomId].players[0]).emit('playerJoined', {
       username: users[socket.id].username
     });
 
-    // Notifier le nouveau joueur du nom du créateur (pour que lui aussi sache contre qui il joue)
     const creatorSocketId = rooms[roomId].players[0];
     const creatorName = users[creatorSocketId]?.username;
     if (creatorName) {
@@ -138,13 +118,10 @@ io.on('connection', (socket) => {
     }
   });
 
-  // Joueur prêt (bateaux placés)
+  // Joueur prêt
   socket.on('playerReady', (boardData) => {
     if (!users[socket.id] || !users[socket.id].roomId) return;
-
-    const roomId = users[socket.id].roomId;
-    const playerId = users[socket.id].playerId;
-
+    const { roomId, playerId } = users[socket.id];
     if (!rooms[roomId]) return;
 
     if (playerId === 0) {
@@ -155,17 +132,11 @@ io.on('connection', (socket) => {
       rooms[roomId].gameState.board2 = boardData;
     }
 
-    // Vérifier si les deux joueurs sont prêts
     if (rooms[roomId].gameState.player1Ready && rooms[roomId].gameState.player2Ready) {
       rooms[roomId].gameState.status = 'playing';
-      rooms[roomId].gameState.turn = 0; // Premier joueur commence
-
-      // Informer les deux joueurs que la partie commence
-      io.to(roomId).emit('gameStart', {
-        turn: 0
-      });
+      rooms[roomId].gameState.turn = 0;
+      io.to(roomId).emit('gameStart', { turn: 0 });
     } else {
-      // Informer les autres joueurs qu'un joueur est prêt
       socket.to(roomId).emit('playerIsReady', { playerId });
     }
   });
@@ -173,63 +144,36 @@ io.on('connection', (socket) => {
   // Action de tir
   socket.on('fireShot', ({ x, y }) => {
     if (!users[socket.id] || !users[socket.id].roomId) return;
-
-    const roomId = users[socket.id].roomId;
-    const playerId = users[socket.id].playerId;
+    const { roomId, playerId } = users[socket.id];
     const room = rooms[roomId];
 
     if (!room || room.gameState.status !== 'playing' || room.gameState.turn !== playerId) return;
 
-    // Déterminer la cible
     const targetPlayerId = playerId === 0 ? 1 : 0;
     const targetBoard = targetPlayerId === 0 ? room.gameState.board1 : room.gameState.board2;
 
     if (!targetBoard) return;
 
-    // Vérifier si la cellule contient un bateau
     const hit = targetBoard.some(ship => ship.positions.some(pos => pos.x === x && pos.y === y && !pos.hit));
 
-    // Mettre à jour l'état du jeu
     if (hit) {
-      // Marquer la position comme touchée
       targetBoard.forEach(ship => {
         ship.positions.forEach(pos => {
-          if (pos.x === x && pos.y === y) {
-            pos.hit = true;
-          }
+          if (pos.x === x && pos.y === y) pos.hit = true;
         });
       });
 
-      // Vérifier si tous les bateaux sont coulés
-      const allSunk = targetBoard.every(ship =>
-        ship.positions.every(pos => pos.hit)
-      );
+      const allSunk = targetBoard.every(ship => ship.positions.every(pos => pos.hit));
 
       if (allSunk) {
         room.gameState.status = 'gameOver';
         io.to(roomId).emit('gameOver', { winner: playerId });
       } else {
-        // Informer les joueurs du résultat
-        io.to(roomId).emit('shotResult', {
-          playerId,
-          x,
-          y,
-          hit: true,
-          nextTurn: playerId
-        });
+        io.to(roomId).emit('shotResult', { playerId, x, y, hit: true, nextTurn: playerId });
       }
     } else {
-      // Changer de tour
       room.gameState.turn = targetPlayerId;
-
-      // Informer les joueurs du résultat
-      io.to(roomId).emit('shotResult', {
-        playerId,
-        x,
-        y,
-        hit: false,
-        nextTurn: targetPlayerId
-      });
+      io.to(roomId).emit('shotResult', { playerId, x, y, hit: false, nextTurn: targetPlayerId });
     }
   });
 
@@ -237,26 +181,15 @@ io.on('connection', (socket) => {
   socket.on('disconnect', () => {
     const user = users[socket.id];
     if (user && user.roomId) {
-      const roomId = user.roomId;
-      const room = rooms[roomId];
-
-      if (room) {
-        // Notifier l'autre joueur
-        socket.to(roomId).emit('opponentLeft');
-
-        // Supprimer la salle si elle existe encore
-        delete rooms[roomId];
-      }
-
-      // Supprimer l'utilisateur
+      socket.to(user.roomId).emit('opponentLeft');
+      delete rooms[user.roomId];
       delete users[socket.id];
     }
   });
 });
 
-// Port
+// MODIFICATION : Port dynamique + Host 0.0.0.0 pour Render
 const PORT = process.env.PORT || 5000;
-server.listen(PORT, () => {
+server.listen(PORT, '0.0.0.0', () => {
   console.log(`Serveur démarré sur le port ${PORT}`);
 });
-

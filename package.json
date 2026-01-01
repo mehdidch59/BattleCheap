@@ -2,7 +2,7 @@
     "name": "battlecheap",
     "version": "1.0.0",
     "private": true,
-    "homepage": "https://VOTRE-USERNAME.github.io/BattleCheap",
+    "homepage": "https://mehdichafai.me/BattleCheap",
     "dependencies": {
         "@testing-library/jest-dom": "^5.17.0",
         "@testing-library/react": "^13.4.0",
