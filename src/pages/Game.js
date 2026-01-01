@@ -6,6 +6,8 @@ import Chat from '../components/Chat';
 import { useSocket } from '../hooks/useSocket';
 import { useAuth } from '../context/AuthContext';
 import Header from '../components/Header';
+import { db } from '../firebase/config';
+import { doc, updateDoc, arrayUnion } from 'firebase/firestore';
 
 const Game = () => {
   const { roomId } = useParams();
@@ -90,13 +92,35 @@ const Game = () => {
       }
     });
 
-    const unsubscribeGameOver = on('gameOver', ({ winner: winnerId }) => {
+    const unsubscribeGameOver = on('gameOver', async ({ winner: winnerId }) => {
       setGameOver(true);
-      setWinner(winnerId === playerId);
-      if (winnerId === playerId) {
+      const isWinner = winnerId === playerId;
+      setWinner(isWinner);
+
+      if (isWinner) {
         setMessage('VICTOIRE ! Vous avez coulé tous les navires ennemis.');
       } else {
         setMessage('DÉFAITE. Votre flotte a été détruite.');
+      }
+
+      // Sauvegarder l'historique si l'utilisateur est connecté
+      if (currentUser) {
+        try {
+          const gameResult = {
+            date: new Date().toISOString(),
+            opponent: opponentName || 'Unknown Hostile',
+            result: isWinner ? 'WIN' : 'LOSS',
+            roomId: roomId
+          };
+
+          await updateDoc(doc(db, 'users', currentUser.uid), {
+            history: arrayUnion(gameResult),
+            // On peut aussi mettre à jour les stats simples si on veut
+            // mais l'historique est plus détaillé
+          });
+        } catch (error) {
+          console.error("Error saving game history:", error);
+        }
       }
     });
 
