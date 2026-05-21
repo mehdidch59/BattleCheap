@@ -2,6 +2,7 @@ const express = require('express');
 const path = require('path');
 const http = require('http');
 const { Server } = require('socket.io');
+const rateLimit = require('express-rate-limit');
 
 // Initialisation
 const app = express();
@@ -19,6 +20,14 @@ const io = new Server(server, {
 });
 
 // Middleware
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // limite chaque IP à 100 requêtes par windowMs
+  standardHeaders: true, // Retourne les infos de limite dans les headers `RateLimit-*`
+  legacyHeaders: false, // Désactive les headers `X-RateLimit-*`
+  message: "Trop de requêtes depuis cette IP, veuillez réessayer après 15 minutes."
+});
+app.use(limiter);
 app.use(express.json());
 
 // En production, servir les fichiers statiques depuis le répertoire build
