@@ -28,7 +28,7 @@
         "@protobufjs/utf8": "^1.1.1",
         "rollup": "^2.80.0",
         "flatted": "^3.4.2",
-        "socket.io-parser": "^4.2.6",
+        "socket.io-parser": "^4.2.7",
         "minimatch": "^3.1.3",
         "filelist": {
             "minimatch": {
