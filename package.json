@@ -13,7 +13,7 @@
         "firebase": "^12.18.0",
         "patch-package": "^8.0.1",
         "react": "^19.2.8",
-        "react-dom": "^18.2.0",
+        "react-dom": "^19.2.8",
         "react-router-dom": "^7.18.2",
         "react-scripts": "5.0.1",
         "socket.io": "^4.8.3",
