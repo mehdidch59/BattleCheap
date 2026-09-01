@@ -122,7 +122,7 @@
         ]
     },
     "devDependencies": {
-        "@eslint/js": "^9.25.1",
+        "@eslint/js": "^10.0.1",
         "concurrently": "^10.0.5",
         "eslint": "^10.9.1",
         "gh-pages": "^6.1.0",
