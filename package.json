@@ -9,7 +9,7 @@
         "@testing-library/user-event": "^14.6.6",
         "bootstrap": "^5.3.5",
         "express": "^5.1.0",
-        "express-rate-limit": "^8.6.2",
+        "express-rate-limit": "^8.7.0",
         "firebase": "^12.18.0",
         "patch-package": "^8.0.1",
         "react": "^19.2.8",
