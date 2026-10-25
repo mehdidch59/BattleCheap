@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
 import { SHIPS_CONFIG } from '../utils/gameAI';
-import { ShipGraphic, ShipIcon } from './ShipGraphic';
+import ShipBlueprint from './ShipBlueprint';
 import { sound } from '../utils/audio';
 
 const FLEET_SPECS = {
   0: {
     role: 'Frappe Aéronavale Lourde',
     nato: 'AIRCRAFT CARRIER',
-    armor: 'Composite Kevlar-Acier',
-    weaponry: 'Aéronefs de combat & Missiles Sea Sparrow',
+    armor: 'Composite Kevlar-Acier 100mm',
+    weaponry: 'Aéronefs F/A-18 & Missiles Sea Sparrow',
     speed: '30 Nœuds',
     stealth: 'Basse (Signature Radar Élevée)'
   },
@@ -62,7 +62,7 @@ const FleetArsenal = () => {
       {/* Header */}
       <div className="arsenal-header">
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <span className="status-indicator online" style={{ width: '8px', height: '8px' }} />
+          <span className="status-indicator online blink-slow" style={{ width: '8px', height: '8px' }} />
           <h4 style={{ margin: 0, fontSize: '0.95rem', letterSpacing: '1.5px', color: 'var(--nav-text)' }}>
             ARSENAL NAVAL DE LA FLOTTE
           </h4>
@@ -72,7 +72,7 @@ const FleetArsenal = () => {
         </span>
       </div>
 
-      {/* Ship Class Selector Pills */}
+      {/* Ship Class Selector Tabs (Stable, non-jitter hover) */}
       <div className="arsenal-tabs">
         {SHIPS_CONFIG.map(s => {
           const isActive = s.id === ship.id;
@@ -82,11 +82,25 @@ const FleetArsenal = () => {
               type="button"
               onClick={() => handleSelect(s.id)}
               className={`arsenal-tab-btn ${isActive ? 'active' : ''}`}
-              title={`${s.name} (${s.size} cases)`}
             >
-              <ShipIcon type={s.icon} size={15} color={isActive ? 'var(--nav-teal)' : 'var(--nav-slate)'} />
-              <span>{s.name}</span>
-              <span className="mono" style={{ fontSize: '0.65rem', opacity: 0.8 }}>({s.size}C)</span>
+              <span className="tab-dot" style={{
+                width: '6px',
+                height: '6px',
+                borderRadius: '50%',
+                background: isActive ? 'var(--nav-teal)' : 'var(--nav-slate)',
+                boxShadow: isActive ? '0 0 6px var(--nav-teal)' : 'none',
+                display: 'inline-block'
+              }} />
+              <span style={{ fontWeight: isActive ? 'bold' : 'normal' }}>{s.name}</span>
+              <span className="mono tab-badge" style={{
+                fontSize: '0.68rem',
+                opacity: isActive ? 1 : 0.7,
+                background: isActive ? 'rgba(100, 255, 218, 0.2)' : 'rgba(255,255,255,0.06)',
+                padding: '1px 6px',
+                borderRadius: '3px'
+              }}>
+                {s.size} CASES
+              </span>
             </button>
           );
         })}
@@ -97,40 +111,40 @@ const FleetArsenal = () => {
         {/* Top Blueprint Telemetry Info */}
         <div className="blueprint-telemetry mono">
           <div className="blueprint-tag">
-            <span style={{ color: 'var(--nav-slate)' }}>DESIGNATION:</span>{' '}
-            <strong style={{ color: 'var(--nav-teal)' }}>{ship.name.toUpperCase()}</strong>
+            <span style={{ color: 'var(--nav-slate)' }}>DÉSIGNATION :</span>{' '}
+            <strong style={{ color: 'var(--nav-teal)', letterSpacing: '1px' }}>{ship.name.toUpperCase()}</strong>
           </div>
           <div className="blueprint-tag">
-            <span style={{ color: 'var(--nav-slate)' }}>MATRICULE:</span>{' '}
-            <span style={{ color: 'var(--nav-text)' }}>{ship.code}</span>
+            <span style={{ color: 'var(--nav-slate)' }}>MATRICULE :</span>{' '}
+            <span style={{ color: 'var(--nav-text)', fontWeight: 'bold' }}>{ship.code}</span>
           </div>
           <div className="blueprint-tag">
-            <span style={{ color: 'var(--nav-slate)' }}>CLASSIFICATION OTAN:</span>{' '}
+            <span style={{ color: 'var(--nav-slate)' }}>CLASSIFICATION OTAN :</span>{' '}
             <span style={{ color: 'var(--nav-slate)' }}>{specs.nato}</span>
           </div>
         </div>
 
-        {/* Visual Graphic Representation */}
+        {/* High-Resolution Vector Blueprint Graphic Display */}
         <div className="blueprint-graphic-wrap">
-          <div className="blueprint-grid-underlay" />
-          <ShipGraphic type={ship.icon} orientation="horizontal" size={ship.size} />
+          <ShipBlueprint type={ship.icon} color="var(--nav-teal)" />
         </div>
 
         {/* Footprint Cell Gauge */}
         <div className="blueprint-cells-gauge">
-          <span className="mono" style={{ fontSize: '0.7rem', color: 'var(--nav-slate)', marginRight: '8px' }}>
+          <span className="mono" style={{ fontSize: '0.72rem', color: 'var(--nav-slate)', marginRight: '10px' }}>
             EMPREINTE RADAR ({ship.size} CASES) :
           </span>
-          <div style={{ display: 'inline-flex', gap: '4px' }}>
+          <div style={{ display: 'inline-flex', gap: '5px' }}>
             {Array.from({ length: 5 }).map((_, i) => (
               <span
                 key={i}
                 style={{
-                  width: '16px',
-                  height: '16px',
-                  borderRadius: '2px',
+                  width: '20px',
+                  height: '20px',
+                  borderRadius: '3px',
                   border: `1px solid ${i < ship.size ? 'var(--nav-teal)' : 'var(--nav-lighter)'}`,
-                  background: i < ship.size ? 'rgba(100, 255, 218, 0.25)' : 'rgba(255,255,255,0.03)',
+                  background: i < ship.size ? 'rgba(100, 255, 218, 0.25)' : 'rgba(255,255,255,0.02)',
+                  boxShadow: i < ship.size ? '0 0 8px rgba(100, 255, 218, 0.25)' : 'none',
                   display: 'inline-block'
                 }}
               />

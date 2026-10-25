@@ -694,25 +694,47 @@ code, .mono {
 }
 
 /* Tilt Accents (Inspired by motionsites.ai & motionin.design) */
-.tilt-gold {
+.tilt-card-wrapper {
+  border-radius: 8px;
+  position: relative;
+}
+
+.tilt-card-wrapper.bento-card-solo {
+  grid-column: span 6;
+}
+
+.tilt-card-wrapper.bento-card-multi {
+  grid-column: span 6;
+}
+
+.tilt-card-inner {
+  border-radius: 8px;
+}
+
+.tilt-gold,
+.tilt-card-inner.tilt-gold {
   border-top: 3px solid var(--nav-gold);
 }
 
-.tilt-gold:hover {
+.tilt-gold:hover,
+.tilt-card-wrapper:hover .tilt-gold {
   border-color: rgba(255, 204, 0, 0.6);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.15), 0 20px 40px -10px rgba(255, 204, 0, 0.25);
 }
 
-.tilt-teal {
+.tilt-teal,
+.tilt-card-inner.tilt-teal {
   border-top: 3px solid var(--nav-teal);
 }
 
-.tilt-teal:hover {
+.tilt-teal:hover,
+.tilt-card-wrapper:hover .tilt-teal {
   border-color: rgba(100, 255, 218, 0.6);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.15), 0 20px 40px -10px rgba(100, 255, 218, 0.25);
 }
 
-.tilt-blue {
+.tilt-blue,
+.tilt-card-inner.tilt-blue {
   border-top: 3px solid #00f0ff;
 }
 
@@ -778,13 +800,18 @@ code, .mono {
   cursor: pointer;
   text-align: center;
   font-family: inherit;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: background 150ms ease, border-color 150ms ease, color 150ms ease, box-shadow 150ms ease;
+  user-select: none;
 }
 
 .protocol-btn:hover {
+  background: rgba(255, 204, 0, 0.08);
   border-color: var(--nav-gold);
   color: var(--nav-text);
-  transform: translateY(-1px);
+}
+
+.protocol-btn:active {
+  transform: scale(0.96);
 }
 
 .protocol-btn.selected {
@@ -879,40 +906,45 @@ code, .mono {
 
 .arsenal-tabs {
   display: flex;
-  gap: 0.5rem;
+  gap: 0.6rem;
   margin-bottom: 1.25rem;
   overflow-x: auto;
-  padding-bottom: 0.35rem;
+  padding-bottom: 0.4rem;
   scrollbar-width: thin;
 }
 
 .arsenal-tab-btn {
   display: inline-flex;
   align-items: center;
-  gap: 7px;
-  background: rgba(2, 12, 27, 0.55);
+  gap: 8px;
+  background: rgba(2, 12, 27, 0.65);
   border: 1px solid var(--nav-lighter);
   color: var(--nav-slate);
-  padding: 0.45rem 0.95rem;
+  padding: 0.5rem 1rem;
   border-radius: 20px;
   font-family: inherit;
   font-size: 0.78rem;
   cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: background 150ms ease, border-color 150ms ease, color 150ms ease, box-shadow 150ms ease;
   white-space: nowrap;
+  user-select: none;
 }
 
 .arsenal-tab-btn:hover {
-  border-color: rgba(100, 255, 218, 0.4);
-  color: var(--nav-text);
-  transform: translateY(-1px);
+  background: rgba(100, 255, 218, 0.08);
+  border-color: rgba(100, 255, 218, 0.45);
+  color: #fff;
 }
 
 .arsenal-tab-btn.active {
-  background: rgba(100, 255, 218, 0.12);
+  background: rgba(100, 255, 218, 0.16);
   border-color: var(--nav-teal);
   color: var(--nav-teal);
-  box-shadow: 0 0 14px rgba(100, 255, 218, 0.22);
+  box-shadow: 0 0 16px rgba(100, 255, 218, 0.28);
+}
+
+.arsenal-tab-btn:active {
+  transform: scale(0.96);
 }
 
 .arsenal-blueprint-stage {
@@ -936,15 +968,15 @@ code, .mono {
 }
 
 .blueprint-graphic-wrap {
-  min-height: 110px;
+  min-height: 160px;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 1.25rem 0;
+  padding: 1.5rem 1rem;
   position: relative;
-  border-top: 1px dashed rgba(100, 255, 218, 0.18);
-  border-bottom: 1px dashed rgba(100, 255, 218, 0.18);
-  background: radial-gradient(circle at center, rgba(100, 255, 218, 0.05) 0%, transparent 75%);
+  border-top: 1px solid rgba(100, 255, 218, 0.2);
+  border-bottom: 1px solid rgba(100, 255, 218, 0.2);
+  background: radial-gradient(circle at center, rgba(100, 255, 218, 0.06) 0%, rgba(2, 11, 24, 0.5) 85%);
 }
 
 .blueprint-cells-gauge {
