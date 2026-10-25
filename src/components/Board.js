@@ -55,7 +55,7 @@ const Board = ({
   const handleMouseEnter = (x, y) => {
     setHoverCoord({ x, y });
     if (!isPlayerBoard && isGameStarted && isPlayerTurn) {
-      sound.playRadarBeep();
+      sound.playTacticalLock();
     }
   };
 
@@ -89,7 +89,7 @@ const Board = ({
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
-        marginBottom: '0.75rem',
+        marginBottom: '0.5rem',
         borderBottom: `2px solid ${borderColor}`,
         paddingBottom: '0.4rem'
       }}>
@@ -113,6 +113,14 @@ const Board = ({
           )}
         </div>
       </div>
+
+      {/* Dynamic Initiative & Tactical Beam */}
+      {!isPlayerBoard && isGameStarted && (
+        <div className={`radar-initiative-beam mono ${isPlayerTurn ? 'your-turn' : 'enemy-turn'}`}>
+          <span className="initiative-dot" />
+          <span>{isPlayerTurn ? 'ORDRE DE FEU ACCORDÉ • VERROUILLAGE SATELLITE ACTIF' : 'DÉTECTION DE FRACTION ENNEMIE • ATTENTE D\'IMPACT'}</span>
+        </div>
+      )}
 
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
         {/* Column Numbers 1-10 - Mathematically aligned with cells */}
@@ -219,6 +227,15 @@ const Board = ({
                     disabled={!isTargetable && !isPlayerBoard}
                     tabIndex={isTargetable ? 0 : -1}
                   >
+                    {isTargetable && hoverCoord?.x === x && hoverCoord?.y === y && (
+                      <div className="targeting-reticle" aria-hidden="true">
+                        <span className="reticle-corner tl" />
+                        <span className="reticle-corner tr" />
+                        <span className="reticle-corner bl" />
+                        <span className="reticle-corner br" />
+                        <span className="reticle-center-pip" />
+                      </div>
+                    )}
                     {cell?.hit && (
                       <div className="hit-marker" title="Cible touchée">
                         <span className="explosion-glow" />

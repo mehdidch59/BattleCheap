@@ -2,7 +2,9 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import Header from '../components/Header';
+import TiltCard from '../components/TiltCard';
 import { sound } from '../utils/audio';
+import { MedalIcon } from '../components/TacticalIcons';
 
 const Register = () => {
   const [email, setEmail] = useState('');
@@ -56,125 +58,133 @@ const Register = () => {
     <div>
       <Header />
 
-      <main className="container" style={{ marginTop: '3.5rem', display: 'flex', justifyContent: 'center', paddingBottom: '3rem' }}>
-        <div className="tactical-panel" style={{ width: '100%', maxWidth: '480px', padding: '2rem' }}>
-          <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-            <div className="mono" style={{ color: 'var(--nav-teal)', fontSize: '0.8rem', letterSpacing: '3px', marginBottom: '0.5rem' }}>
-              DOSSIER D'ENRÔLEMENT NAVAL
-            </div>
-            <h2 style={{ color: 'var(--nav-text)', margin: 0, fontSize: '1.8rem' }}>
-              NOUVEL OPÉRATEUR
-            </h2>
-            <p className="mono" style={{ color: 'var(--nav-slate)', fontSize: '0.8rem', marginTop: '0.4rem' }}>
-              Initialisation du matricule de guerre
-            </p>
-          </div>
-
-          {error && <div className="alert alert-danger">{error}</div>}
-
-          <form onSubmit={handleSubmit}>
-            <div className="mb-3">
-              <label htmlFor="username" className="mono" style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--nav-text)', fontSize: '0.85rem' }}>
-                ALIAS DU COMMANDANT (INDICATIF RADIO)
-              </label>
-              <input
-                type="text"
-                className="form-control"
-                id="username"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                required
-                autoComplete="username"
-                placeholder="Ex: GhostRider"
-              />
+      <main className="container" style={{ marginTop: '3rem', display: 'flex', justifyContent: 'center', paddingBottom: '3.5rem' }}>
+        <TiltCard accent="teal" className="bento-card auth-bento-card" style={{ width: '100%', maxWidth: '500px' }}>
+          <div style={{ padding: '2.25rem' }}>
+            {/* Header Telemetry */}
+            <div className="auth-telemetry-strip mono">
+              <span className="status-indicator online blink-slow" style={{ width: '6px', height: '6px' }} />
+              <span>REG_CADRE: INITIALISATION MATRICULE NAVAL</span>
             </div>
 
-            <div className="mb-3">
-              <label htmlFor="email" className="mono" style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--nav-text)', fontSize: '0.85rem' }}>
-                ADRESSE DE CONTACT OFFICIELLE
-              </label>
-              <input
-                type="email"
-                className="form-control"
-                id="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                autoComplete="email"
-                placeholder="officier@flotte.mil"
-              />
-            </div>
-
-            <div className="mb-3">
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-                <label htmlFor="password" className="mono" style={{ color: 'var(--nav-text)', fontSize: '0.85rem' }}>
-                  CODE D'ACCÈS
-                </label>
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="mono"
-                  style={{
-                    background: 'none',
-                    border: 'none',
-                    color: 'var(--nav-teal)',
-                    fontSize: '0.75rem',
-                    cursor: 'pointer',
-                    padding: 0
-                  }}
-                >
-                  {showPassword ? 'MASQUER' : 'AFFICHER'}
-                </button>
+            <div style={{ textAlign: 'center', marginBottom: '1.75rem' }}>
+              <div style={{ display: 'inline-flex', padding: '10px', borderRadius: '50%', background: 'rgba(100, 255, 218, 0.1)', border: '1px solid rgba(100, 255, 218, 0.3)', marginBottom: '0.75rem' }}>
+                <MedalIcon size={28} color="var(--nav-teal)" />
               </div>
-              <input
-                type={showPassword ? 'text' : 'password'}
-                className="form-control"
-                id="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                autoComplete="new-password"
-                placeholder="Minimum 6 caractères"
-              />
+              <h2 style={{ color: 'var(--nav-text)', margin: 0, fontSize: '1.6rem', letterSpacing: '2px' }}>
+                NOUVEL OPÉRATEUR
+              </h2>
+              <p className="mono" style={{ color: 'var(--nav-slate)', fontSize: '0.78rem', marginTop: '0.4rem' }}>
+                Ouverture d'un dossier officiel de commandement
+              </p>
             </div>
 
-            <div className="mb-3">
-              <label htmlFor="confirmPassword" className="mono" style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--nav-text)', fontSize: '0.85rem' }}>
-                CONFIRMATION DU CODE D'ACCÈS
-              </label>
-              <input
-                type={showPassword ? 'text' : 'password'}
-                className="form-control"
-                id="confirmPassword"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                required
-                autoComplete="new-password"
-                placeholder="Répétez le code"
-              />
+            {error && <div className="alert alert-danger">{error}</div>}
+
+            <form onSubmit={handleSubmit}>
+              <div className="mb-3">
+                <label htmlFor="username" className="mono" style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--nav-text)', fontSize: '0.8rem' }}>
+                  ALIAS DU COMMANDANT (INDICATIF RADIO)
+                </label>
+                <input
+                  type="text"
+                  className="form-control"
+                  id="username"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  required
+                  autoComplete="username"
+                  placeholder="Ex: GhostRider"
+                />
+              </div>
+
+              <div className="mb-3">
+                <label htmlFor="email" className="mono" style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--nav-text)', fontSize: '0.8rem' }}>
+                  ADRESSE DE CONTACT OFFICIELLE (EMAIL)
+                </label>
+                <input
+                  type="email"
+                  className="form-control"
+                  id="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  autoComplete="email"
+                  placeholder="capitaine@flotte.mil"
+                />
+              </div>
+
+              <div className="mb-3">
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                  <label htmlFor="password" className="mono" style={{ color: 'var(--nav-text)', fontSize: '0.8rem' }}>
+                    CODE DE SÉCURITÉ (MIN. 6 CARACTÈRES)
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="mono"
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      color: 'var(--nav-teal)',
+                      fontSize: '0.72rem',
+                      cursor: 'pointer',
+                      padding: 0
+                    }}
+                  >
+                    {showPassword ? 'MASQUER' : 'AFFICHER'}
+                  </button>
+                </div>
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  className="form-control"
+                  id="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  autoComplete="new-password"
+                  placeholder="••••••••••••"
+                />
+              </div>
+
+              <div className="mb-3">
+                <label htmlFor="confirmPassword" className="mono" style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--nav-text)', fontSize: '0.8rem' }}>
+                  CONFIRMATION DU CODE
+                </label>
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  className="form-control"
+                  id="confirmPassword"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  required
+                  autoComplete="new-password"
+                  placeholder="••••••••••••"
+                />
+              </div>
+
+              <button
+                type="submit"
+                className="btn btn-primary"
+                style={{ width: '100%', marginTop: '1.25rem', padding: '0.95rem', fontWeight: 600 }}
+                disabled={loading}
+              >
+                {loading ? 'ENRÔLEMENT EN COURS...' : 'VALIDER LE DOSSIER MILITAIRE'}
+              </button>
+            </form>
+
+            <div className="text-center mt-3" style={{ borderTop: '1px solid var(--nav-lighter)', paddingTop: '1.25rem', marginTop: '1.75rem' }}>
+              <span style={{ color: 'var(--nav-slate)', fontSize: '0.82rem' }}>Déjà enregistré aux registres ? </span>
+              <Link
+                to="/login"
+                onClick={() => sound.playBlip()}
+                style={{ color: 'var(--nav-teal)', textDecoration: 'none', fontWeight: 'bold' }}
+              >
+                CONNEXION DIRECTE
+              </Link>
             </div>
-
-            <button
-              type="submit"
-              className="btn btn-primary"
-              style={{ width: '100%', marginTop: '1.25rem', padding: '1rem' }}
-              disabled={loading}
-            >
-              {loading ? 'CRÉATION DU MATRICULE...' : 'ENREGISTRER LE NOUVEL OPÉRATEUR'}
-            </button>
-          </form>
-
-          <div className="text-center mt-3" style={{ borderTop: '1px solid var(--nav-lighter)', paddingTop: '1.25rem', marginTop: '1.75rem' }}>
-            <span style={{ color: 'var(--nav-slate)', fontSize: '0.85rem' }}>Déjà enregistré dans la base ? </span>
-            <Link
-              to="/login"
-              onClick={() => sound.playBlip()}
-              style={{ color: 'var(--nav-teal)', textDecoration: 'none', fontWeight: 'bold' }}
-            >
-              CONNEXION AU POSTE
-            </Link>
           </div>
-        </div>
+        </TiltCard>
       </main>
     </div>
   );

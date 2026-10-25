@@ -127,7 +127,8 @@ const Game = () => {
     if (!gameStarted || !isPlayerTurn || gameOver) return;
     if (myShots.some(s => s.x === x && s.y === y)) return;
 
-    sound.playLaunch();
+    sound.playArtilleryLaunch();
+    sound.playShellWhistle();
     const coordStr = `${LETTERS[y]}-${x + 1 < 10 ? `0${x + 1}` : x + 1}`;
 
     if (isSolo) {
@@ -161,7 +162,7 @@ const Game = () => {
         sound.playShipSunk();
         addTrauma(0.9);
         setSunkEnemyShips(prev => [...prev, justSunk]);
-        triggerBanner(`NAVsoundIRE ENNEMI COULÉ : ${justSunk.name.toUpperCase()} !`, 'danger');
+        triggerBanner(`BÂTIMENT ENNEMI COULÉ : ${justSunk.name.toUpperCase()} !`, 'danger');
         addCombatLog(`[${coordStr}] DIRECT DANS LE MILLE ! ${justSunk.name} ennemi COULÉ !`, 'sink');
       } else {
         addCombatLog(`[${coordStr}] IMPACT CONFIRMÉ ! Bâtiment ennemi touché.`, 'hit');

@@ -355,6 +355,58 @@ class SoundManager {
     this.playBlip(1200, 0.02);
   }
 
+  // Tactical target acquisition lock beep
+  playTacticalLock() {
+    this.playBlip(1760, 0.03);
+  }
+
+  // Heavy artillery thump on launch
+  playArtilleryLaunch() {
+    if (this.isMuted) return;
+    this.ensureContext();
+    if (!this.ctx) return;
+    try {
+      const t = this.ctx.currentTime;
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(175, t);
+      osc.frequency.exponentialRampToValueAtTime(35, t + 0.35);
+
+      gain.gain.setValueAtTime(0.4, t);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.35);
+
+      osc.connect(gain);
+      gain.connect(this.sfxGain);
+      osc.start(t);
+      osc.stop(t + 0.35);
+    } catch (e) {}
+  }
+
+  // Supersonic shell whistle with Doppler effect
+  playShellWhistle() {
+    if (this.isMuted) return;
+    this.ensureContext();
+    if (!this.ctx) return;
+    try {
+      const t = this.ctx.currentTime;
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(1200, t);
+      osc.frequency.exponentialRampToValueAtTime(340, t + 0.38);
+
+      gain.gain.setValueAtTime(0.01, t);
+      gain.gain.linearRampToValueAtTime(0.18, t + 0.15);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.38);
+
+      osc.connect(gain);
+      gain.connect(this.sfxGain);
+      osc.start(t);
+      osc.stop(t + 0.38);
+    } catch (e) {}
+  }
+
   // Deep-sea submarine ambient drone
   startAmbience() {
     if (this.ambiencePlaying || this.isMuted) return;

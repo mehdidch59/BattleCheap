@@ -21,7 +21,7 @@ const ShipPlacement = ({ onReady }) => {
     setOrientation(prev => prev === 'horizontal' ? 'vertical' : 'horizontal');
   };
 
-  // Keyboard shortcut listener for 'R' to rotate, 'Z' to undo
+  // Keyboard shortcut listener for 'R' to rotate, 'Z' to undo, 'A' to auto-deploy, 'Enter' to lock in
   const handleKeyDown = (e) => {
     if (e.key === 'r' || e.key === 'R') {
       e.preventDefault();
@@ -29,6 +29,14 @@ const ShipPlacement = ({ onReady }) => {
     } else if (e.key === 'z' || e.key === 'Z') {
       e.preventDefault();
       handleUndo();
+    } else if (e.key === 'a' || e.key === 'A') {
+      e.preventDefault();
+      handleAutoDeploy();
+    } else if (e.key === 'Enter') {
+      if (placedShips.length === SHIPS_CONFIG.length) {
+        e.preventDefault();
+        handleConfirm();
+      }
     }
   };
 
@@ -315,6 +323,14 @@ const ShipPlacement = ({ onReady }) => {
             )}
           </div>
         </div>
+      </div>
+
+      {/* Hotkey Shortcuts Strip (Emil Kowalski & Game-UI principles) */}
+      <div className="hotkeys-telemetry mono">
+        <span className="hotkey-item"><kbd>R</kbd> PIVOTER</span>
+        <span className="hotkey-item"><kbd>Z</kbd> ANNULER</span>
+        <span className="hotkey-item"><kbd>A</kbd> AUTO-DÉPLOIEMENT</span>
+        <span className="hotkey-item"><kbd>ENTRÉE</kbd> VERROUILLER</span>
       </div>
 
       {/* Confirmation CTA */}
