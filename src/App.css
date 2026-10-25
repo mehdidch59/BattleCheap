@@ -15,6 +15,17 @@
   --nav-gold: #ffcc00;
   --nav-green: #00ff88;
 
+  /* Spring & Easing Physics (Emil Kowalski / motionin.design) */
+  --ease-spring: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+
+  /* Glassmorphism Specs (liquid-glass-js / modulify.ai / getdesign.md) */
+  --glass-bg: rgba(17, 34, 64, 0.82);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-highlight: inset 0 1px 0 0 rgba(255, 255, 255, 0.12);
+  --glass-shadow: 0 20px 40px -15px rgba(2, 11, 24, 0.85);
+
   /* Cell dimension scaling dynamically */
   --cell-size: clamp(28px, 3.8vw, 38px);
   --border-radius: 4px;
@@ -93,16 +104,17 @@ code, .mono {
   flex: 1;
 }
 
-/* Tactical Panel */
+/* Tactical Panel (Frosted Specular Glassmorphism) */
 .tactical-panel {
-  background: rgba(17, 34, 64, 0.85);
-  backdrop-filter: blur(8px);
-  border: 1px solid var(--nav-lighter);
+  background: var(--glass-bg);
+  backdrop-filter: blur(12px) saturate(160%);
+  -webkit-backdrop-filter: blur(12px) saturate(160%);
+  border: 1px solid var(--glass-border);
   border-radius: var(--border-radius);
   padding: 1.75rem;
-  box-shadow: 0 12px 35px -10px rgba(2, 12, 27, 0.85);
+  box-shadow: var(--glass-highlight), var(--glass-shadow);
   position: relative;
-  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+  transition: border-color 200ms var(--ease-out), box-shadow 200ms var(--ease-out);
 }
 
 .tactical-panel::after {
@@ -120,7 +132,7 @@ code, .mono {
   border-color: rgba(100, 255, 218, 0.35);
 }
 
-/* Tactical Action Buttons */
+/* Tactical Action Buttons (Emil Kowalski Tactile Physics) */
 .btn {
   display: inline-flex;
   align-items: center;
@@ -128,27 +140,33 @@ code, .mono {
   background: transparent;
   color: var(--nav-teal);
   font-family: 'JetBrains Mono', monospace;
-  font-size: 0.85rem;
-  padding: 0.85rem 1.5rem;
+  font-size: 0.82rem;
+  padding: 0.75rem 1.35rem;
   border: 1px solid var(--nav-teal);
   border-radius: var(--border-radius);
   cursor: pointer;
   text-decoration: none;
-  transition: all 0.2s ease;
+  transition: background 150ms var(--ease-out), border-color 150ms var(--ease-out), box-shadow 150ms var(--ease-out), transform 120ms var(--ease-out);
   text-transform: uppercase;
   letter-spacing: 1px;
   position: relative;
   user-select: none;
+  font-variant-numeric: tabular-nums;
 }
 
 .btn:hover:not(:disabled) {
   background: rgba(100, 255, 218, 0.12);
-  transform: translateY(-2px);
+  transform: translateY(-1.5px);
   box-shadow: 0 0 16px rgba(100, 255, 218, 0.35);
 }
 
 .btn:active:not(:disabled) {
-  transform: translateY(0);
+  transform: scale(0.97);
+}
+
+.btn:focus-visible {
+  outline: 2px solid var(--nav-teal);
+  outline-offset: 3px;
 }
 
 .btn:disabled {
@@ -594,20 +612,6 @@ code, .mono {
 .hero-telemetry-strip .telemetry-separator {
   opacity: 0.4;
   color: var(--nav-slate);
-}
-
-.hero-title {
-  display: block;
-  width: 100%;
-  margin: 0.25rem 0 1rem;
-  font-size: clamp(2.8rem, 6.5vw, 4.5rem);
-  font-weight: 700;
-  letter-spacing: 8px;
-  line-height: 1.1;
-  background: linear-gradient(135deg, #ffffff 10%, #64ffda 60%, #00f0ff 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  filter: drop-shadow(0 0 20px rgba(100, 255, 218, 0.4));
 }
 
 .hero-radar-badge {

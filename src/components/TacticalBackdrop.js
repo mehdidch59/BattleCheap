@@ -87,7 +87,22 @@ const TacticalBackdrop = () => {
       mouse.targetY = -1000;
     };
 
+    // Expanding sonar waves from user clicks/taps (tactical immersion)
+    const waves = [];
+    const handlePointerDown = (e) => {
+      if (prefersReducedMotion) return;
+      waves.push({
+        x: e.clientX,
+        y: e.clientY,
+        radius: 6,
+        maxRadius: Math.min(width, height) * 0.45,
+        alpha: 0.38
+      });
+      if (waves.length > 5) waves.shift();
+    };
+
     window.addEventListener('mousemove', handleMouseMove, { passive: true });
+    window.addEventListener('pointerdown', handlePointerDown, { passive: true });
     document.addEventListener('mouseleave', handleMouseLeave, { passive: true });
 
     // Render loop
@@ -146,6 +161,22 @@ const TacticalBackdrop = () => {
         ctx.stroke();
 
         ctx.restore();
+
+        // 2b. Sonar Acoustic Ripple Shockwaves from clicks/taps
+        for (let w = waves.length - 1; w >= 0; w--) {
+          const wave = waves[w];
+          wave.radius += 3.2;
+          wave.alpha = Math.max(0, wave.alpha - 0.007);
+          if (wave.alpha <= 0.01 || wave.radius >= wave.maxRadius) {
+            waves.splice(w, 1);
+            continue;
+          }
+          ctx.beginPath();
+          ctx.arc(wave.x, wave.y, wave.radius, 0, Math.PI * 2);
+          ctx.strokeStyle = `rgba(100, 255, 218, ${wave.alpha})`;
+          ctx.lineWidth = 1.2;
+          ctx.stroke();
+        }
       }
 
       // 3. Floating Tactical Particle Constellation
@@ -209,6 +240,7 @@ const TacticalBackdrop = () => {
       cancelAnimationFrame(animationFrameId);
       window.removeEventListener('resize', resize);
       window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('pointerdown', handlePointerDown);
       document.removeEventListener('mouseleave', handleMouseLeave);
     };
   }, []);
