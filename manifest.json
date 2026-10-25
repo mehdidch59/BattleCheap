@@ -1,6 +1,7 @@
 {
   "short_name": "BattleCheap",
-  "name": "BattleCheap - Bataille Navale",
+  "name": "BattleCheap — Centre de Commandement Naval",
+  "description": "Plateforme tactique de guerre navale en haute mer en temps réel face à l'I.A. ou en multijoueur",
   "icons": [
     {
       "src": "favicon.ico",
@@ -20,6 +21,7 @@
   ],
   "start_url": ".",
   "display": "standalone",
-  "theme_color": "#000000",
-  "background_color": "#ffffff"
-} 
+  "orientation": "any",
+  "theme_color": "#020b18",
+  "background_color": "#020b18"
+}
