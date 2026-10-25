@@ -10,8 +10,9 @@ import { sound } from '../utils/audio';
  */
 const BridgeTelemetry = ({ className = '' }) => {
   const [heading, setHeading] = useState(318);
+  const [ping, setPing] = useState(24);
 
-  // Subtle compass gyro simulation drift
+  // Subtle compass gyro simulation drift & socket telemetry ping
   useEffect(() => {
     const interval = setInterval(() => {
       setHeading(prev => {
@@ -20,6 +21,7 @@ const BridgeTelemetry = ({ className = '' }) => {
         if (next < 0) next += 360;
         return next;
       });
+      setPing(prev => Math.max(16, Math.min(48, prev + Math.floor(Math.random() * 7) - 3)));
     }, 4500);
 
     return () => clearInterval(interval);
@@ -70,6 +72,11 @@ const BridgeTelemetry = ({ className = '' }) => {
         <span style={{ color: 'var(--nav-gold)', fontWeight: 'bold' }}>7700-MIL</span>
         <span style={{ opacity: 0.3 }}>|</span>
         <span style={{ color: 'var(--nav-teal)', fontWeight: 'bold' }}>DEFCON 1</span>
+        <span style={{ opacity: 0.3 }}>|</span>
+        <span className="mono" style={{ color: 'var(--nav-teal)', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+          <span className="status-indicator online blink-slow" style={{ width: '5px', height: '5px' }} />
+          RTT {ping}ms
+        </span>
       </div>
     </div>
   );

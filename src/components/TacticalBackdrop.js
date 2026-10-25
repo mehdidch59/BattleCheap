@@ -38,6 +38,7 @@ const TacticalBackdrop = () => {
     // Radar sonar sweep state
     let sonarAngle = 0;
     const sonarSpeed = prefersReducedMotion ? 0 : 0.006;
+    let causticTime = 0;
 
     // Particle nodes
     const PARTICLE_COUNT = 38;
@@ -126,6 +127,36 @@ const TacticalBackdrop = () => {
 
         ctx.fillStyle = radialGradient;
         ctx.fillRect(0, 0, width, height);
+      }
+
+      // 1b. Procedural Oceanic Depth Caustics (ruucm/shadergradient & pmndrs inspiration)
+      if (!prefersReducedMotion) {
+        causticTime += 0.008;
+        ctx.save();
+        ctx.lineWidth = 1;
+        const lineCount = 5;
+        for (let l = 0; l < lineCount; l++) {
+          ctx.beginPath();
+          const yBase = (height / (lineCount + 1)) * (l + 1);
+          ctx.moveTo(0, yBase);
+          for (let x = 0; x <= width; x += 40) {
+            const wave1 = Math.sin(x * 0.004 + causticTime + l) * 14;
+            const wave2 = Math.cos(x * 0.008 - causticTime * 0.8 + l * 2) * 8;
+            let mouseInfluence = 0;
+            if (mouse.x > -500) {
+              const dx = x - mouse.x;
+              const dy = yBase - mouse.y;
+              const dist = Math.sqrt(dx * dx + dy * dy);
+              if (dist < 260) {
+                mouseInfluence = (1 - dist / 260) * 16 * Math.sin(causticTime * 3);
+              }
+            }
+            ctx.lineTo(x, yBase + wave1 + wave2 + mouseInfluence);
+          }
+          ctx.strokeStyle = `rgba(100, 255, 218, ${0.015 + (l % 2) * 0.006})`;
+          ctx.stroke();
+        }
+        ctx.restore();
       }
 
       // 2. Slow Radar Sonar Sweep in background

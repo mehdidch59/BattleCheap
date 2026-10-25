@@ -299,6 +299,30 @@ class SoundManager {
         bubbleOsc.start(bStart);
         bubbleOsc.stop(bStart + 0.14);
       }
+
+      // 4. Subterranean Hull Implosion (Low-frequency hydrostatic collapse wave at 38Hz)
+      const tSub = t + 0.2;
+      const subOsc = this.ctx.createOscillator();
+      const subGain = this.ctx.createGain();
+      const subFilter = this.ctx.createBiquadFilter();
+
+      subOsc.type = 'sine';
+      subOsc.frequency.setValueAtTime(42, tSub);
+      subOsc.frequency.exponentialRampToValueAtTime(26, tSub + 0.9);
+
+      subFilter.type = 'lowpass';
+      subFilter.frequency.setValueAtTime(90, tSub);
+      subFilter.Q.setValueAtTime(3.5, tSub);
+
+      subGain.gain.setValueAtTime(0.45, tSub);
+      subGain.gain.exponentialRampToValueAtTime(0.001, tSub + 0.9);
+
+      subOsc.connect(subFilter);
+      subFilter.connect(subGain);
+      subGain.connect(this.sfxGain);
+
+      subOsc.start(tSub);
+      subOsc.stop(tSub + 0.9);
     } catch (e) {}
   }
 

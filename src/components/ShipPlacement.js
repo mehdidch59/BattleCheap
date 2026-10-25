@@ -6,6 +6,42 @@ import { sound } from '../utils/audio';
 const LETTERS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'];
 const NUMBERS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 
+const PRESET_FORMATIONS = {
+  coastal: {
+    label: 'DISPERSION CÔTIÈRE',
+    desc: 'Bordures maritimes',
+    ships: [
+      { id: 0, isHorizontal: true, start: { x: 0, y: 0 } },
+      { id: 1, isHorizontal: false, start: { x: 9, y: 0 } },
+      { id: 2, isHorizontal: true, start: { x: 6, y: 9 } },
+      { id: 3, isHorizontal: false, start: { x: 0, y: 6 } },
+      { id: 4, isHorizontal: true, start: { x: 1, y: 9 } }
+    ]
+  },
+  staggered: {
+    label: 'ÉCRAN EN QUINCONCE',
+    desc: 'Anti-parité I.A.',
+    ships: [
+      { id: 0, isHorizontal: true, start: { x: 2, y: 2 } },
+      { id: 1, isHorizontal: false, start: { x: 8, y: 4 } },
+      { id: 2, isHorizontal: true, start: { x: 1, y: 7 } },
+      { id: 3, isHorizontal: false, start: { x: 5, y: 5 } },
+      { id: 4, isHorizontal: true, start: { x: 7, y: 9 } }
+    ]
+  },
+  battleline: {
+    label: 'LIGNE D\'ESCADRE',
+    desc: 'Vanguard d\'assaut',
+    ships: [
+      { id: 0, isHorizontal: false, start: { x: 2, y: 2 } },
+      { id: 1, isHorizontal: false, start: { x: 4, y: 3 } },
+      { id: 2, isHorizontal: false, start: { x: 6, y: 4 } },
+      { id: 3, isHorizontal: false, start: { x: 8, y: 3 } },
+      { id: 4, isHorizontal: true, start: { x: 4, y: 8 } }
+    ]
+  }
+};
+
 const ShipPlacement = ({ onReady }) => {
   const [grid, setGrid] = useState(Array(GRID_SIZE).fill(null).map(() => Array(GRID_SIZE).fill(null)));
   const [selectedShipId, setSelectedShipId] = useState(0);
@@ -197,6 +233,39 @@ const ShipPlacement = ({ onReady }) => {
     selectNextUnplacedShip(updatedPlaced);
   };
 
+  // 1-Click Tactical Naval Formation Application
+  const handleApplyFormation = (key) => {
+    sound.playSonarPing();
+    const formation = PRESET_FORMATIONS[key];
+    if (!formation) return;
+
+    const newGrid = Array(GRID_SIZE).fill(null).map(() => Array(GRID_SIZE).fill(null));
+    const newPlaced = [];
+
+    formation.ships.forEach(item => {
+      const shipConfig = SHIPS_CONFIG.find(s => s.id === item.id);
+      if (!shipConfig) return;
+
+      const positions = [];
+      for (let i = 0; i < shipConfig.size; i++) {
+        const posX = item.isHorizontal ? item.start.x + i : item.start.x;
+        const posY = item.isHorizontal ? item.start.y : item.start.y + i;
+        newGrid[posY][posX] = shipConfig.id;
+        positions.push({ x: posX, y: posY, hit: false });
+      }
+
+      newPlaced.push({
+        ...shipConfig,
+        isHorizontal: item.isHorizontal,
+        positions
+      });
+    });
+
+    setGrid(newGrid);
+    setPlacedShips(newPlaced);
+    setSelectedShipId(0);
+  };
+
   const handleConfirm = () => {
     if (placedShips.length === SHIPS_CONFIG.length) {
       sound.playLaunch();
@@ -268,6 +337,44 @@ const ShipPlacement = ({ onReady }) => {
             </button>
           );
         })}
+      </div>
+
+      {/* Tactical Naval Formations Quick Presets (Modulify & Game-UI inspiration) */}
+      <div style={{
+        marginBottom: '1.25rem',
+        background: 'rgba(2, 12, 27, 0.65)',
+        border: '1px solid var(--nav-lighter)',
+        borderRadius: '4px',
+        padding: '0.65rem 1rem'
+      }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+          <span className="mono" style={{ fontSize: '0.72rem', color: 'var(--nav-teal)', letterSpacing: '1px' }}>
+            DOCTRINES NAVALES & FORMATIONS PRÉCONFIGURÉES :
+          </span>
+          <span className="mono" style={{ fontSize: '0.65rem', color: 'var(--nav-gold)' }}>1-CLIC STRATÉGIQUE</span>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '0.5rem' }}>
+          {Object.entries(PRESET_FORMATIONS).map(([key, f]) => (
+            <button
+              key={key}
+              type="button"
+              onClick={() => handleApplyFormation(key)}
+              className="btn btn-secondary mono"
+              style={{
+                padding: '0.45rem 0.6rem',
+                fontSize: '0.72rem',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '2px',
+                alignItems: 'center'
+              }}
+              title="Déployer instantanément cette formation"
+            >
+              <strong style={{ color: 'var(--nav-text)' }}>{f.label}</strong>
+              <span style={{ fontSize: '0.62rem', color: 'var(--nav-slate)' }}>{f.desc}</span>
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Control Actions Bar */}

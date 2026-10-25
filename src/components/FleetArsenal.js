@@ -10,7 +10,8 @@ const FLEET_SPECS = {
     armor: 'Composite Kevlar-Acier 100mm',
     weaponry: 'Aéronefs F/A-18 & Missiles Sea Sparrow',
     speed: '30 Nœuds',
-    stealth: 'Basse (Signature Radar Élevée)'
+    stealth: 'Basse (Signature Radar Élevée)',
+    stats: { firepower: 95, armor: 85, speed: 60, stealth: 25 }
   },
   1: {
     role: 'Escorte Antiaérienne & Missiles',
@@ -18,7 +19,8 @@ const FLEET_SPECS = {
     armor: 'Blindage Renforcé Double-Coque',
     weaponry: '122 Cellules VLS Tomahawk / SM-2',
     speed: '32 Nœuds',
-    stealth: 'Moyenne (Contre-mesures actives)'
+    stealth: 'Moyenne (Contre-mesures actives)',
+    stats: { firepower: 90, armor: 90, speed: 75, stealth: 45 }
   },
   2: {
     role: 'Lutte Anti-Sous-Marine & Escadre',
@@ -26,7 +28,8 @@ const FLEET_SPECS = {
     armor: 'Blindage Modulaire Haute Résistance',
     weaponry: 'Torpilles Mk-46 & Lanceur ASROC',
     speed: '31 Nœuds',
-    stealth: 'Élevée (Coque furtive profilée)'
+    stealth: 'Élevée (Coque furtive profilée)',
+    stats: { firepower: 78, armor: 68, speed: 85, stealth: 72 }
   },
   3: {
     role: 'Infiltration Furtive & Torpilles',
@@ -34,7 +37,8 @@ const FLEET_SPECS = {
     armor: 'Coque Titane Hyperbare',
     weaponry: '4 Tubes Torpilles 533mm Mk-48 ADCAP',
     speed: '25+ Nœuds (En immersion)',
-    stealth: 'Maximale (Signature Acoustique Nulle)'
+    stealth: 'Maximale (Signature Acoustique Nulle)',
+    stats: { firepower: 82, armor: 80, speed: 65, stealth: 98 }
   },
   4: {
     role: 'Reconnaissance & Interception Rapide',
@@ -42,7 +46,8 @@ const FLEET_SPECS = {
     armor: 'Alliage Léger Aluminium Renforcé',
     weaponry: '2 Tubes Torpilles Légères & Canon 20mm',
     speed: '41 Nœuds (Interception Éclair)',
-    stealth: 'Élevée (Profil ultra-bas sur l\'eau)'
+    stealth: 'Élevée (Profil ultra-bas sur l\'eau)',
+    stats: { firepower: 58, armor: 40, speed: 96, stealth: 86 }
   }
 };
 
@@ -169,6 +174,39 @@ const FleetArsenal = () => {
           <div className="spec-card">
             <div className="spec-label">INDICE DE DISCRÉTION</div>
             <div className="spec-value">{specs.stealth}</div>
+          </div>
+        </div>
+
+        {/* Animated Performance Telemetry Gauges (Getdesign.md / Modulify.ai inspiration) */}
+        <div style={{ marginTop: '1.25rem', padding: '1rem', background: 'rgba(2, 12, 27, 0.6)', borderRadius: '4px', border: '1px solid var(--nav-lighter)' }}>
+          <div className="mono" style={{ fontSize: '0.72rem', color: 'var(--nav-teal)', marginBottom: '0.75rem', letterSpacing: '1px' }}>
+            INDICES TÉLÉMÉTRIQUES DE COMBAT
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '0.85rem' }}>
+            {[
+              { label: 'PUISSANCE DE FRAPPE', value: specs.stats.firepower, color: 'var(--nav-red)' },
+              { label: 'BLINDAGE DE COQUE', value: specs.stats.armor, color: 'var(--nav-gold)' },
+              { label: 'VITESSE MAXIMALE', value: specs.stats.speed, color: 'var(--nav-teal)' },
+              { label: 'INDICE DE FURTIVITÉ', value: specs.stats.stealth, color: '#00f0ff' }
+            ].map(stat => (
+              <div key={stat.label} className="mono" style={{ fontSize: '0.7rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                  <span style={{ color: 'var(--nav-slate)' }}>{stat.label}</span>
+                  <span style={{ color: stat.color, fontWeight: 'bold' }}>{stat.value}%</span>
+                </div>
+                <div style={{ height: '5px', background: 'rgba(255,255,255,0.08)', borderRadius: '2px', overflow: 'hidden' }}>
+                  <div
+                    style={{
+                      width: `${stat.value}%`,
+                      height: '100%',
+                      background: stat.color,
+                      boxShadow: `0 0 8px ${stat.color}`,
+                      transition: 'width 0.6s cubic-bezier(0.16, 1, 0.3, 1)'
+                    }}
+                  />
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </div>
