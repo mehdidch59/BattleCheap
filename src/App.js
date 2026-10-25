@@ -3,6 +3,7 @@ import { Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { SocketProvider } from './context/SocketContext';
 import PrivateRoute from './components/PrivateRoute';
+import TacticalBackdrop from './components/TacticalBackdrop';
 
 // Pages
 import Home from './pages/Home';
@@ -19,21 +20,27 @@ function App() {
     <AuthProvider>
       <SocketProvider>
         <div className="App">
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/game/:roomId" element={
-              <PrivateRoute>
-                <Game />
-              </PrivateRoute>
-            } />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+          {/* Interactive Tactical Canvas Backdrop (Canvas Sonar & Node Constellation) */}
+          <TacticalBackdrop />
+
+          {/* Application Routes */}
+          <div style={{ position: 'relative', zIndex: 1, minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+              <Route path="/game/:roomId" element={
+                <PrivateRoute>
+                  <Game />
+                </PrivateRoute>
+              } />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </div>
         </div>
       </SocketProvider>
     </AuthProvider>
   );
 }
 
-export default App; 
+export default App;

@@ -1,34 +1,96 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useSocket } from '../hooks/useSocket';
 import { useAuth } from '../context/AuthContext';
 import Header from '../components/Header';
+import TiltCard from '../components/TiltCard';
+import FleetArsenal from '../components/FleetArsenal';
 import { db } from '../firebase/config';
 import { doc, getDoc } from 'firebase/firestore';
+import { sound } from '../utils/audio';
+import {
+  RadarIcon,
+  AiChipIcon,
+  SatelliteIcon,
+  MedalIcon,
+  SkullIcon,
+  CrosshairIcon,
+  SoundWaveIcon,
+  ShieldIcon
+} from '../components/TacticalIcons';
+
+// Circular SVG Win-Rate Dial Gauge (Inspired by modern SaaS dashboards)
+const WinRateDial = ({ rate }) => {
+  const radius = 32;
+  const circumference = 2 * Math.PI * radius;
+  const strokeDashoffset = circumference - (rate / 100) * circumference;
+  const color = rate >= 50 ? 'var(--nav-teal)' : 'var(--nav-gold)';
+
+  return (
+    <div style={{ position: 'relative', width: '80px', height: '80px', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+      <svg width="80" height="80" style={{ transform: 'rotate(-90deg)' }}>
+        {/* Track circle */}
+        <circle
+          cx="40"
+          cy="40"
+          r={radius}
+          stroke="rgba(136, 146, 176, 0.15)"
+          strokeWidth="6"
+          fill="none"
+        />
+        {/* Animated value circle */}
+        <circle
+          cx="40"
+          cy="40"
+          r={radius}
+          stroke={color}
+          strokeWidth="6"
+          fill="none"
+          strokeDasharray={circumference}
+          strokeDashoffset={strokeDashoffset}
+          strokeLinecap="round"
+          style={{
+            transition: 'stroke-dashoffset 1s cubic-bezier(0.16, 1, 0.3, 1)',
+            filter: `drop-shadow(0 0 6px ${color})`
+          }}
+        />
+      </svg>
+      <div style={{ position: 'absolute', textAlign: 'center', pointerEvents: 'none' }}>
+        <div className="mono" style={{ fontSize: '0.95rem', fontWeight: 700, color }}>
+          {rate}%
+        </div>
+        <div className="mono" style={{ fontSize: '0.52rem', color: 'var(--nav-slate)', letterSpacing: '0.5px' }}>
+          RATIO
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const Home = () => {
   const [roomId, setRoomId] = useState('');
   const [joinRoomId, setJoinRoomId] = useState('');
   const [error, setError] = useState('');
-  const navigate = useNavigate();
-  const { socket, isConnected, emit, on, off, socketError } = useSocket();
-  const { currentUser } = useAuth();
+  const [soloDifficulty, setSoloDifficulty] = useState('veteran');
   const [history, setHistory] = useState([]);
 
+  const navigate = useNavigate();
+  const { isConnected, emit, on, off, socketError } = useSocket();
+  const { currentUser } = useAuth();
+
+  // Load history if user is authenticated
   useEffect(() => {
-    // Charger l'historique si l'utilisateur est connecté
     const fetchHistory = async () => {
       if (currentUser) {
         try {
           const docRef = doc(db, 'users', currentUser.uid);
           const docSnap = await getDoc(docRef);
           if (docSnap.exists() && docSnap.data().history) {
-            // Trier par date décroissante
             const sortedHistory = docSnap.data().history.sort((a, b) => new Date(b.date) - new Date(a.date));
             setHistory(sortedHistory);
           }
         } catch (err) {
-          console.error("Error fetching history:", err);
+          console.error('Error fetching history:', err);
         }
       }
     };
@@ -36,28 +98,31 @@ const Home = () => {
     fetchHistory();
   }, [currentUser]);
 
+  // Socket room events
   useEffect(() => {
-    // Écouter la confirmation de création de salle
-    const handleRoomCreated = ({ roomId }) => {
-      navigate(`/game/${roomId}`);
+    const handleRoomCreated = ({ roomId: createdId }) => {
+      sound.playSonarPing();
+      navigate(`/game/${createdId}`);
     };
 
-    // Écouter la confirmation pour rejoindre une salle
-    const handleRoomJoined = ({ roomId }) => {
-      navigate(`/game/${roomId}`);
+    const handleRoomJoined = ({ roomId: joinedId }) => {
+      sound.playSonarPing();
+      navigate(`/game/${joinedId}`);
     };
 
-    // Écouter les erreurs
-    const handleError = (message) => {
-      setError(message);
+    const handleError = (msg) => {
+      sound.playBlip(220, 0.15);
+      setError(msg);
     };
 
     const handleRoomFull = () => {
-      setError('Cette salle est pleine');
+      sound.playBlip(220, 0.15);
+      setError('Cette zone d\'opération est complète (2/2 commandants).');
     };
 
     const handleRoomNotFound = () => {
-      setError('Salle introuvable');
+      sound.playBlip(220, 0.15);
+      setError('Secteur introuvable. Veuillez vérifier le code.');
     };
 
     if (isConnected) {
@@ -79,142 +144,448 @@ const Home = () => {
     };
   }, [navigate, isConnected, on, off]);
 
+  // Launch Solo Simulation vs AI
+  const handleStartSolo = () => {
+    sound.playLaunch();
+    const soloId = `solo-${soloDifficulty}-${Math.random().toString(36).substring(2, 6)}`;
+    navigate(`/game/${soloId}`);
+  };
+
+  // Generate random room code
+  const handleGenerateRandomCode = () => {
+    sound.playBlip(800, 0.05);
+    const code = Math.random().toString(36).substring(2, 8).toUpperCase();
+    setRoomId(code);
+  };
+
+  // Create Multiplayer Lobby
   const handleCreateRoom = () => {
     setError('');
-    const newRoomId = roomId || Math.random().toString(36).substring(2, 8).toUpperCase();
-
-    // Utiliser le nom de l'utilisateur ou son email s'il est connecté
-    const username = currentUser ? (currentUser.displayName || currentUser.email) : 'Joueur 1';
-
+    sound.playBlip();
+    const newRoomId = roomId.trim() || Math.random().toString(36).substring(2, 8).toUpperCase();
+    const username = currentUser ? (currentUser.displayName || currentUser.email) : 'Commandant';
     emit('createRoom', { roomId: newRoomId, username });
   };
 
-  const handleJoinRoom = () => {
+  // Join Multiplayer Lobby
+  const handleJoinRoom = (e) => {
+    e.preventDefault();
     setError('');
-    if (!joinRoomId) {
-      setError('Veuillez entrer un code de salle');
+    sound.playBlip();
+    if (!joinRoomId.trim()) {
+      setError('Veuillez entrer le code du secteur à rejoindre');
       return;
     }
-
-    // Utiliser le nom de l'utilisateur ou son email s'il est connecté
-    const username = currentUser ? (currentUser.displayName || currentUser.email) : 'Joueur 2';
-
-    emit('joinRoom', { roomId: joinRoomId, username });
+    const username = currentUser ? (currentUser.displayName || currentUser.email) : 'Commandant';
+    emit('joinRoom', { roomId: joinRoomId.trim(), username });
   };
+
+  // Calculate career statistics
+  const totalGames = history.length;
+  const wins = history.filter(g => g.result === 'WIN').length;
+  const losses = totalGames - wins;
+  const winRate = totalGames > 0 ? Math.round((wins / totalGames) * 100) : 0;
 
   return (
     <div>
       <Header />
 
-      <main className="container" style={{ marginTop: '4rem' }}>
-        <div style={{ textAlign: 'center', marginBottom: '4rem' }}>
-          <div style={{ letterSpacing: '4px', color: 'var(--nav-teal)', marginBottom: '1rem', fontSize: '0.9rem' }} className="mono">
-            {/* UNIFIED NAVAL COMMAND SYSTEM */}
-            UNIFIED NAVAL COMMAND SYSTEM
+      <main className="container" style={{ marginTop: '2.5rem', paddingBottom: '4.5rem' }}>
+        {/* Kinetic Hero Banner with Shimmer & Telemetry Strip */}
+        <section className="home-hero">
+          <div className="hero-telemetry-strip mono">
+            <span className="telemetry-item">
+              <span className="status-indicator online blink-slow" style={{ width: '7px', height: '7px' }} />
+              SEC_NET: 04-NORAD
+            </span>
+            <span className="telemetry-separator">/</span>
+            <span className="telemetry-item">RADAR: SYNCHRONISÉ</span>
+            <span className="telemetry-separator">/</span>
+            <span className="telemetry-item" style={{ color: 'var(--nav-teal)', fontWeight: 'bold' }}>
+              DEFCON 1 ACTIF
+            </span>
           </div>
-          <h1 style={{ fontSize: '4rem', margin: 0 }}>BATTLECHEAP</h1>
-          <p className="mono" style={{ color: 'var(--nav-slate)', marginTop: '0.5rem' }}>
-            SECURE TACTICAL UPLINK v2.0
-          </p>
-        </div>
 
+          <h1 className="hero-title">
+            BATTLECHEAP
+          </h1>
+
+          <div className="hero-radar-badge mono">
+            <RadarIcon size={16} color="var(--nav-teal)" />
+            <span>CENTRE DE COMMANDEMENT NAVAL STRATÉGIQUE</span>
+          </div>
+
+          <p className="hero-description mono">
+            Plateforme tactique de guerre navale en haute mer. Engagez des cibles ennemies en simulation solo face à l'I.A. ou défiez d'autres commandants en réseau sécurisé.
+          </p>
+        </section>
+
+        {/* Global Alert Notification */}
         {(error || socketError) && (
-          <div className="alert alert-danger">{error || socketError}</div>
+          <div className="alert alert-danger" style={{ maxWidth: '1120px', margin: '0 auto 2rem' }}>
+            {error || socketError}
+          </div>
         )}
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'minmax(300px, 1fr) minmax(300px, 1fr)', gap: '2rem', maxWidth: '900px', margin: '0 auto' }}>
-          {/* Create Room Panel */}
-          <div className="tactical-panel">
-            <h3 className="text-center" style={{ color: 'var(--nav-teal)', marginBottom: '1.5rem', borderBottom: '1px solid rgba(100, 255, 218, 0.1)', paddingBottom: '1rem' }}>
-              INITIALIZE OPERATION
-            </h3>
-            <div style={{ marginBottom: '1.5rem' }}>
-              <label className="mono" style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--nav-slate)', fontSize: '0.8rem' }}>MISSION ID [OPTIONAL]</label>
-              <input
-                type="text"
-                className="form-control"
-                placeholder="AUTO-GENERATE"
-                value={roomId}
-                onChange={(e) => setRoomId(e.target.value.toUpperCase())}
-                maxLength={6}
-              />
-            </div>
-            <button
-              className="btn btn-primary"
-              style={{ width: '100%' }}
-              onClick={handleCreateRoom}
-              disabled={!isConnected}
-            >
-              CREATE LOBBY
-            </button>
-          </div>
-
-          {/* Join Room Panel */}
-          <div className="tactical-panel">
-            <h3 className="text-center" style={{ color: 'var(--nav-text)', marginBottom: '1.5rem', borderBottom: '1px solid rgba(255, 255, 255, 0.1)', paddingBottom: '1rem' }}>
-              JOIN EXISTING FRONT
-            </h3>
-            <div style={{ marginBottom: '1.5rem' }}>
-              <label className="mono" style={{ display: 'block', marginBottom: '0.5rem', color: 'var(--nav-slate)', fontSize: '0.8rem' }}>COORDINATES [ROOM ID]</label>
-              <input
-                type="text"
-                className="form-control"
-                placeholder="ENTER CODE"
-                value={joinRoomId}
-                onChange={(e) => setJoinRoomId(e.target.value.toUpperCase())}
-                maxLength={6}
-              />
-            </div>
-            <button
-              className="btn btn-secondary"
-              style={{ width: '100%' }}
-              onClick={handleJoinRoom}
-              disabled={!isConnected}
-            >
-              CONNECT
-            </button>
-          </div>
-        </div>
-
-        {/* Service Record (History) */}
-        {currentUser && history.length > 0 && (
-          <div className="tactical-panel" style={{ maxWidth: '900px', margin: '2rem auto' }}>
-            <h3 className="text-center" style={{ color: 'var(--nav-teal)', marginBottom: '1.5rem', borderBottom: '1px solid rgba(100, 255, 218, 0.1)', paddingBottom: '1rem' }}>
-              SERVICE RECORD
-            </h3>
-
-            <div style={{ maxHeight: '300px', overflowY: 'auto', paddingRight: '0.5rem' }}>
-              {history.map((game, index) => (
-                <div key={index} style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  padding: '1rem',
-                  borderBottom: '1px solid var(--nav-lighter)',
-                  marginBottom: '0.5rem',
-                  background: 'rgba(17, 34, 64, 0.5)'
-                }}>
-                  <div>
-                    <div className="mono" style={{
-                      color: game.result === 'WIN' ? 'var(--nav-teal)' : 'var(--nav-red)',
-                      fontWeight: 'bold',
-                      fontSize: '1.1rem'
-                    }}>
-                      {game.result === 'WIN' ? 'MISSION ACCOMPLISHED' : 'MISSION FAILED'}
-                    </div>
-                    <div style={{ fontSize: '0.8rem', color: 'var(--nav-slate)', marginTop: '0.2rem' }}>
-                      VS: <span style={{ color: 'var(--nav-text)' }}>{game.opponent}</span>
-                    </div>
+        {/* Modern Bento Grid Layout (Inspired by getdesign.md & modulify.ai) */}
+        <div className="bento-container">
+          {/* Bento Cell 1: Solo Simulation vs AI (Gold Theme) */}
+          <TiltCard accent="gold" className="bento-card bento-card-solo">
+            <div className="bento-card-inner">
+              <div>
+                {/* Header */}
+                <div className="mode-card-header">
+                  <div className="mode-icon-box gold">
+                    <AiChipIcon size={26} color="var(--nav-gold)" />
                   </div>
-                  <div className="mono" style={{ textAlign: 'right', fontSize: '0.8rem', color: 'var(--nav-slate)' }}>
-                    <div>{new Date(game.date).toLocaleDateString()}</div>
-                    <div>{new Date(game.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <h3 style={{ color: 'var(--nav-gold)', margin: 0, fontSize: '1.15rem', letterSpacing: '1.5px' }}>
+                        SIMULATION TACTIQUE
+                      </h3>
+                      <span className="mono status-chip gold">
+                        HORS-LIGNE
+                      </span>
+                    </div>
+                    <div className="mono" style={{ fontSize: '0.75rem', color: 'var(--nav-slate)', marginTop: '2px' }}>
+                      ENTRAÎNEMENT FACE À L'I.A.
+                    </div>
                   </div>
                 </div>
-              ))}
+
+                {/* Description */}
+                <p style={{ fontSize: '0.88rem', color: 'var(--nav-slate)', lineHeight: 1.6, marginBottom: '1.25rem' }}>
+                  Affrontez instantanément un algorithme naval tactique doté de prise de décision autonome, sans attente ni dépendance réseau.
+                </p>
+
+                {/* Protocol / Difficulty Selection */}
+                <div style={{ marginBottom: '1.5rem' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.6rem' }}>
+                    <label className="mono" style={{ color: 'var(--nav-text)', fontSize: '0.72rem', letterSpacing: '1px' }}>
+                      PROTOCOLE DE COMBAT I.A.
+                    </label>
+                    <span className="mono" style={{ fontSize: '0.68rem', color: 'var(--nav-gold)' }}>
+                      {soloDifficulty === 'recruit' ? 'MENACE 1/3' : soloDifficulty === 'veteran' ? 'MENACE 2/3' : 'MENACE 3/3 (MAX)'}
+                    </span>
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.5rem' }}>
+                    {[
+                      { id: 'recruit', label: 'RECRUE', desc: 'Basique' },
+                      { id: 'veteran', label: 'VÉTÉRAN', desc: 'Parité & Traque' },
+                      { id: 'admiral', label: 'AMIRAL', desc: 'Densité Heatmap' }
+                    ].map(tier => {
+                      const isSelected = soloDifficulty === tier.id;
+                      return (
+                        <button
+                          key={tier.id}
+                          type="button"
+                          onClick={() => {
+                            sound.playBlip(680, 0.05);
+                            setSoloDifficulty(tier.id);
+                          }}
+                          className={`protocol-btn ${isSelected ? 'selected' : ''}`}
+                        >
+                          <div style={{ fontSize: '0.78rem', fontWeight: 600 }}>{tier.label}</div>
+                          <div className="mono" style={{ fontSize: '0.62rem', opacity: 0.85, marginTop: '2px' }}>{tier.desc}</div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+
+              {/* Main Action CTA */}
+              <div>
+                <button
+                  className="btn btn-primary btn-gold-beam"
+                  onClick={handleStartSolo}
+                  style={{
+                    width: '100%',
+                    borderColor: 'var(--nav-gold)',
+                    color: 'var(--nav-gold)',
+                    padding: '0.95rem',
+                    fontWeight: 600
+                  }}
+                >
+                  LANCER L'EXERCICE (SOLO)
+                </button>
+              </div>
+            </div>
+          </TiltCard>
+
+          {/* Bento Cell 2: Online Multiplayer Operations (Teal Theme) */}
+          <TiltCard accent="teal" className="bento-card bento-card-multi">
+            <div className="bento-card-inner">
+              <div>
+                {/* Header */}
+                <div className="mode-card-header">
+                  <div className="mode-icon-box teal">
+                    <SatelliteIcon size={26} color="var(--nav-teal)" />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <h3 style={{ color: 'var(--nav-teal)', margin: 0, fontSize: '1.15rem', letterSpacing: '1.5px' }}>
+                        FRONT MULTIJOUEUR
+                      </h3>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <span className={`status-indicator ${isConnected ? 'online' : 'offline'}`} />
+                        <span className="mono" style={{ fontSize: '0.7rem', color: isConnected ? 'var(--nav-teal)' : 'var(--nav-red)' }}>
+                          {isConnected ? 'EN LIGNE' : 'CONNEXION'}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="mono" style={{ fontSize: '0.75rem', color: 'var(--nav-slate)', marginTop: '2px' }}>
+                      LIAISON CHIFFRÉE DIRECTE
+                    </div>
+                  </div>
+                </div>
+
+                {/* Description */}
+                <p style={{ fontSize: '0.88rem', color: 'var(--nav-slate)', lineHeight: 1.6, marginBottom: '1.25rem' }}>
+                  Ouvrez un secteur de bataille pour affronter un ami en temps réel ou connectez-vous aux coordonnées d'une salle active.
+                </p>
+
+                {/* Create Room Action with Generator */}
+                <div style={{ marginBottom: '1rem' }}>
+                  <div style={{ display: 'flex', gap: '0.5rem' }}>
+                    <div style={{ position: 'relative', flex: 1 }}>
+                      <input
+                        type="text"
+                        className="form-control"
+                        placeholder="CODE SECTEUR (EX: SIGMA)"
+                        value={roomId}
+                        onChange={(e) => setRoomId(e.target.value.toUpperCase())}
+                        maxLength={8}
+                        style={{ marginBottom: 0, fontSize: '0.82rem', paddingRight: '2.5rem' }}
+                      />
+                      <button
+                        type="button"
+                        onClick={handleGenerateRandomCode}
+                        className="random-code-btn"
+                        title="Générer un code aléatoire"
+                        aria-label="Générer un code aléatoire"
+                      >
+                        🎲
+                      </button>
+                    </div>
+                    <button
+                      className="btn btn-primary"
+                      onClick={handleCreateRoom}
+                      disabled={!isConnected}
+                      style={{ whiteSpace: 'nowrap', padding: '0.8rem 1.25rem' }}
+                    >
+                      CRÉER
+                    </button>
+                  </div>
+                </div>
+
+                {/* Divider */}
+                <div className="tactical-divider mono">
+                  OU REJOINDRE UN SECTEUR
+                </div>
+
+                {/* Join Room Action */}
+                <form onSubmit={handleJoinRoom} style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
+                  <input
+                    type="text"
+                    className="form-control"
+                    placeholder="ENTRER LE CODE (EX: A8F3B9)"
+                    value={joinRoomId}
+                    onChange={(e) => setJoinRoomId(e.target.value.toUpperCase())}
+                    maxLength={8}
+                    style={{ marginBottom: 0, fontSize: '0.82rem' }}
+                  />
+                  <button
+                    type="submit"
+                    className="btn btn-secondary"
+                    disabled={!isConnected}
+                    style={{ whiteSpace: 'nowrap', padding: '0.8rem 1.25rem' }}
+                  >
+                    REJOINDRE
+                  </button>
+                </form>
+              </div>
+
+              {/* Footer status link */}
+              <div className="mono" style={{ fontSize: '0.72rem', color: 'var(--nav-slate)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span>CANAL WEBSOCKET v4</span>
+                <span style={{ color: isConnected ? 'var(--nav-teal)' : 'var(--nav-red)' }}>
+                  {isConnected ? '● CANAL SÉCURISÉ ACTIF' : '○ RECHERCHE SERVEUR...'}
+                </span>
+              </div>
+            </div>
+          </TiltCard>
+
+          {/* Bento Cell 3: Interactive Naval Arsenal Showcase (Spans Across) */}
+          <div className="bento-card bento-card-arsenal">
+            <FleetArsenal />
+          </div>
+
+          {/* Bento Cell 4: Commander Career Telemetry & Service Record */}
+          <div className="bento-card bento-card-stats">
+            {currentUser ? (
+              <div className="career-bento-inner">
+                <div className="career-bento-header">
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                    <WinRateDial rate={winRate} />
+                    <div>
+                      <div className="mono" style={{ color: 'var(--nav-teal)', fontSize: '0.75rem', letterSpacing: '1px' }}>
+                        REGISTRE DU COMMANDANT
+                      </div>
+                      <h4 style={{ margin: '3px 0 0', color: 'var(--nav-text)', fontSize: '1.1rem', letterSpacing: '1px' }}>
+                        {currentUser.displayName || currentUser.email}
+                      </h4>
+                      <div className="mono" style={{ color: 'var(--nav-slate)', fontSize: '0.7rem', marginTop: '2px' }}>
+                        GRADE : {wins >= 10 ? 'AMIRAL D\'ESCADRE' : wins >= 5 ? 'CAPITAINE DE VAISSEAU' : 'ENSEIGNE DE COMBAT'}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Career Metrics Pills */}
+                  <div className="career-metrics-row mono">
+                    <div className="career-metric-pill">
+                      <span className="metric-title">ENGAGEMENTS</span>
+                      <span className="metric-num">{totalGames}</span>
+                    </div>
+                    <div className="career-metric-pill win">
+                      <span className="metric-title">VICTOIRES</span>
+                      <span className="metric-num">{wins}</span>
+                    </div>
+                    <div className="career-metric-pill loss">
+                      <span className="metric-title">DÉFAITES</span>
+                      <span className="metric-num">{losses}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* History Mission Log */}
+                {history.length === 0 ? (
+                  <div className="mono" style={{ textAlign: 'center', color: 'var(--nav-slate)', padding: '2rem 0', fontStyle: 'italic', fontSize: '0.82rem' }}>
+                    Aucune mission enregistrée dans le journal de bord. Engagez un combat pour initialiser votre palmarès militaire.
+                  </div>
+                ) : (
+                  <div className="career-history-scroll">
+                    {history.slice(0, 10).map((game, index) => {
+                      const isWin = game.result === 'WIN';
+                      return (
+                        <div
+                          key={index}
+                          className={`history-log-row ${isWin ? 'win' : 'loss'}`}
+                        >
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                            {isWin ? (
+                              <MedalIcon size={18} color="var(--nav-teal)" />
+                            ) : (
+                              <SkullIcon size={18} color="var(--nav-red)" />
+                            )}
+                            <div>
+                              <div className="mono" style={{
+                                color: isWin ? 'var(--nav-teal)' : 'var(--nav-red)',
+                                fontWeight: 'bold',
+                                fontSize: '0.82rem'
+                              }}>
+                                {isWin ? 'VICTOIRE NAVALE' : 'BÂTIMENTS SUBMERGÉS'}
+                              </div>
+                              <div style={{ fontSize: '0.72rem', color: 'var(--nav-slate)', marginTop: '1px' }}>
+                                CIBLE : <span style={{ color: 'var(--nav-text)' }}>{game.opponent}</span>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="mono" style={{ textAlign: 'right', fontSize: '0.68rem', color: 'var(--nav-slate)' }}>
+                            <div>{new Date(game.date).toLocaleDateString()}</div>
+                            <div>{new Date(game.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="unauth-bento-prompt">
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                  <div className="mode-icon-box teal">
+                    <ShieldIcon size={24} color="var(--nav-teal)" />
+                  </div>
+                  <div>
+                    <div className="mono" style={{ color: 'var(--nav-teal)', fontSize: '0.78rem', letterSpacing: '1px' }}>
+                      REGISTRE DU COMMANDANT VERROUILLÉ
+                    </div>
+                    <div style={{ fontSize: '0.88rem', color: 'var(--nav-slate)', marginTop: '2px' }}>
+                      Connectez votre matricule pour enregistrer vos états de service, médailles de guerre et télémétrie de victoires.
+                    </div>
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1rem' }}>
+                  <Link
+                    to="/login"
+                    className="btn btn-primary"
+                    onClick={() => sound.playBlip()}
+                    style={{ padding: '0.65rem 1.4rem', fontSize: '0.8rem' }}
+                  >
+                    CONNEXION
+                  </Link>
+                  <Link
+                    to="/register"
+                    className="btn btn-secondary"
+                    onClick={() => sound.playBlip()}
+                    style={{ padding: '0.65rem 1.4rem', fontSize: '0.8rem' }}
+                  >
+                    ENRÔLEMENT
+                  </Link>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Feature Highlights Strip */}
+        <section className="features-strip">
+          <div className="feature-pill">
+            <div className="feature-pill-icon">
+              <CrosshairIcon size={22} color="var(--nav-teal)" />
+            </div>
+            <div>
+              <div style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--nav-text)', letterSpacing: '1px' }}>
+                COMMAND BRIDGE 10x10
+              </div>
+              <div className="mono" style={{ fontSize: '0.72rem', color: 'var(--nav-slate)', marginTop: '2px' }}>
+                Passerelle côte-à-côte avec réticule et télémétrie active
+              </div>
             </div>
           </div>
-        )}
+
+          <div className="feature-pill">
+            <div className="feature-pill-icon">
+              <ShieldIcon size={22} color="var(--nav-gold)" />
+            </div>
+            <div>
+              <div style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--nav-text)', letterSpacing: '1px' }}>
+                STRATÉGIE I.A. AVANCÉE
+              </div>
+              <div className="mono" style={{ fontSize: '0.72rem', color: 'var(--nav-slate)', marginTop: '2px' }}>
+                Balayage par damier & carte thermique de probabilités
+              </div>
+            </div>
+          </div>
+
+          <div className="feature-pill">
+            <div className="feature-pill-icon">
+              <SoundWaveIcon size={22} color="var(--nav-teal)" />
+            </div>
+            <div>
+              <div style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--nav-text)', letterSpacing: '1px' }}>
+                SYNTHÈSE AUDIO WEB
+              </div>
+              <div className="mono" style={{ fontSize: '0.72rem', color: 'var(--nav-slate)', marginTop: '2px' }}>
+                Pings sonar, salves d'artillerie et explosions temps réel
+              </div>
+            </div>
+          </div>
+        </section>
       </main>
     </div>
   );
