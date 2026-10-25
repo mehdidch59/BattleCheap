@@ -458,6 +458,57 @@ class SoundManager {
     }
     return this.ambiencePlaying;
   }
+
+  // Military radio squelch burst (short RF static + telemetry comms pip)
+  playRadioTransmission() {
+    if (this.isMuted) return;
+    this.ensureContext();
+    if (!this.ctx) return;
+
+    try {
+      const t = this.ctx.currentTime;
+
+      // 1. Noise squelch burst (0.05s)
+      const bufferSize = Math.floor(this.ctx.sampleRate * 0.05);
+      const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) {
+        data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (bufferSize * 0.4));
+      }
+
+      const noise = this.ctx.createBufferSource();
+      noise.buffer = buffer;
+
+      const filter = this.ctx.createBiquadFilter();
+      filter.type = 'bandpass';
+      filter.frequency.setValueAtTime(2400, t);
+      filter.Q.setValueAtTime(3.0, t);
+
+      const noiseGain = this.ctx.createGain();
+      noiseGain.gain.setValueAtTime(0.18, t);
+      noiseGain.gain.exponentialRampToValueAtTime(0.001, t + 0.05);
+
+      noise.connect(filter);
+      filter.connect(noiseGain);
+      noiseGain.connect(this.sfxGain);
+      noise.start(t);
+
+      // 2. High-frequency dual pip (telemetry tone)
+      const osc = this.ctx.createOscillator();
+      const oscGain = this.ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(1800, t + 0.03);
+      osc.frequency.setValueAtTime(2400, t + 0.06);
+
+      oscGain.gain.setValueAtTime(0.12, t + 0.03);
+      oscGain.gain.exponentialRampToValueAtTime(0.001, t + 0.1);
+
+      osc.connect(oscGain);
+      oscGain.connect(this.sfxGain);
+      osc.start(t + 0.03);
+      osc.stop(t + 0.1);
+    } catch (e) {}
+  }
 }
 
 export const sound = new SoundManager();

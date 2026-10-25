@@ -45,6 +45,7 @@ const Game = () => {
   const [rematchRequestedByOpponent, setRematchRequestedByOpponent] = useState(false);
   const [rematchSent, setRematchSent] = useState(false);
   const [rematchDeclined, setRematchDeclined] = useState(false);
+  const [debriefCopied, setDebriefCopied] = useState(false);
   
   // Mobile active tab: 'offensive' | 'defensive'
   const [activeTab, setActiveTab] = useState('offensive');
@@ -79,6 +80,49 @@ const Game = () => {
     }, 30);
     return () => clearInterval(interval);
   }, [trauma]);
+
+  // Global Keyboard Shortcuts (M: Mute toggle, Space/Tab: Switch Radar View)
+  useEffect(() => {
+    const handleGlobalKeyDown = (e) => {
+      const tag = document.activeElement ? document.activeElement.tagName.toLowerCase() : '';
+      if (tag === 'input' || tag === 'textarea' || document.activeElement?.isContentEditable) {
+        return;
+      }
+
+      if (e.key === 'm' || e.key === 'M') {
+        e.preventDefault();
+        sound.toggleMute();
+      } else if (e.key === 'Tab' || e.key === ' ') {
+        e.preventDefault();
+        sound.playBlip(600, 0.04);
+        setActiveTab(prev => prev === 'offensive' ? 'defensive' : 'offensive');
+      }
+    };
+
+    window.addEventListener('keydown', handleGlobalKeyDown);
+    return () => window.removeEventListener('keydown', handleGlobalKeyDown);
+  }, []);
+
+  // Copy structured naval debrief report to clipboard
+  const handleCopyDebrief = () => {
+    sound.playSonarPing();
+    const accuracy = myShots.length > 0 ? Math.round((myShots.filter(s => s.hit).length / myShots.length) * 100) : 0;
+    const resultText = winner ? '🏆 VICTOIRE NAVALE ÉCLATANTE' : '💀 BÂTIMENTS ALLIÉS SUBMERGÉS';
+    const debriefText = [
+      `⚓ RAPPORT NAVAL BATTLECHEAP ⚓`,
+      `══════════════════════════════`,
+      `${resultText}`,
+      `⚔️ Cible : ${opponentName || (isSolo ? 'IA TACTIQUE' : 'Officier Hostile')}`,
+      `🎯 Précision : ${accuracy}% (${myShots.length} salves)`,
+      `💥 Navires ennemis coulés : ${sunkEnemyShips.length}/5`,
+      `⏱️ Cycles de tir : ${turnCount}`,
+      `🌐 Rejoindre le front : https://battlecheap.mehdichafai.me/`
+    ].join('\n');
+
+    navigator.clipboard.writeText(debriefText);
+    setDebriefCopied(true);
+    setTimeout(() => setDebriefCopied(false), 3000);
+  };
 
   const addCombatLog = useCallback((text, type = 'info') => {
     const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
@@ -251,6 +295,8 @@ const Game = () => {
         addCombatLog(`L'adversaire a tiré en [${coordStr}] : Tir manqué dans l'eau.`, 'info');
         setMessage('Tir ennemi manqué ! C\'est à vous d\'ordonner la riposte.');
         setIsPlayerTurn(true);
+        setActiveTab('offensive');
+        sound.playTacticalLock();
         setTurnCount(t => t + 1);
       }
 
@@ -391,7 +437,12 @@ const Game = () => {
       }
 
       if (nextTurn !== undefined) {
-        setIsPlayerTurn(nextTurn === playerId);
+        const isMyTurn = nextTurn === playerId;
+        setIsPlayerTurn(isMyTurn);
+        if (isMyTurn) {
+          setActiveTab('offensive');
+          sound.playTacticalLock();
+        }
         setTurnCount(t => t + 1);
       }
     });
@@ -819,6 +870,56 @@ const Game = () => {
                   <div className="mono" style={{ fontSize: '1.25rem', color: 'var(--nav-text)', fontWeight: 'bold' }}>{turnCount}</div>
                 </div>
               </div>
+
+              {/* Share Mission Debrief Button */}
+              <button
+                className="btn btn-secondary mono"
+                onClick={handleCopyDebrief}
+                style={{
+                  width: '100%',
+                  marginBottom: '1rem',
+                  padding: '0.65rem 1rem',
+                  fontSize: '0.78rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px',
+                  background: debriefCopied ? 'rgba(100, 255, 218, 0.2)' : 'rgba(2, 12, 27, 0.8)',
+                  borderColor: debriefCopied ? 'var(--nav-teal)' : 'var(--nav-lighter)',
+                  color: debriefCopied ? 'var(--nav-teal)' : 'var(--nav-text)'
+                }}
+              >
+                <ClipboardIcon size={15} color="currentColor" />
+                <span>{debriefCopied ? '✓ RAPPORT COPIÉ DANS LE PRESSE-PAPIER !' : 'COPIER LE RAPPORT DE MISSION (PARTAGE)'}</span>
+              </button>
+
+              {/* Unauthenticated Guest Commander Prompt */}
+              {!currentUser && (
+                <div style={{
+                  background: 'rgba(255, 204, 0, 0.08)',
+                  border: '1px solid rgba(255, 204, 0, 0.3)',
+                  borderRadius: '4px',
+                  padding: '0.65rem 0.9rem',
+                  marginBottom: '1rem',
+                  fontSize: '0.75rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: '0.5rem',
+                  textAlign: 'left'
+                }}>
+                  <div className="mono" style={{ color: 'var(--nav-gold)', fontSize: '0.72rem' }}>
+                    Commandant Invité : Enregistrez votre matricule pour monter en grade !
+                  </div>
+                  <button
+                    className="btn btn-primary"
+                    onClick={() => navigate('/register')}
+                    style={{ padding: '0.3rem 0.7rem', fontSize: '0.7rem', whiteSpace: 'nowrap' }}
+                  >
+                    S'ENRÔLER
+                  </button>
+                </div>
+              )}
 
               {/* Rematch Alerts (Multiplayer) */}
               {!isSolo && (

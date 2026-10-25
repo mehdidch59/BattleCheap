@@ -3,6 +3,14 @@ import { useSocket } from '../hooks/useSocket';
 import { useAuth } from '../context/AuthContext';
 import { sound } from '../utils/audio';
 
+const QUICK_RADIO_COMMS = [
+  { id: 'acquired', icon: '🎯', label: 'CIBLE ACQUISE' },
+  { id: 'impact', icon: '💥', label: 'DIRECT DANS LE MILLE !' },
+  { id: 'defensive', icon: '🛡️', label: 'FORMATION DÉFENSIVE' },
+  { id: 'salute', icon: '⚓', label: 'SALUT MILITAIRE' },
+  { id: 'alert', icon: '⚠️', label: 'SECTEUR CRITIQUE !' },
+];
+
 const Chat = () => {
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
@@ -24,7 +32,7 @@ const Chat = () => {
   useEffect(() => {
     const handleReceiveMessage = (message) => {
       setMessages((prev) => [...prev, message]);
-      sound.playBlip(1100, 0.04);
+      sound.playRadioTransmission();
     };
 
     if (socket) {
@@ -41,15 +49,20 @@ const Chat = () => {
   const handleSendMessage = (e) => {
     e.preventDefault();
     if (newMessage.trim()) {
-      sound.playBlip(880, 0.03);
+      sound.playRadioTransmission();
       emit('sendMessage', { message: newMessage.trim() });
       setNewMessage('');
     }
   };
 
+  const handleSendQuickRadio = (radioText) => {
+    sound.playRadioTransmission();
+    emit('sendMessage', { message: radioText });
+  };
+
   return (
     <div className="tactical-panel chat-module" style={{
-      height: '180px',
+      height: '220px',
       display: 'flex',
       flexDirection: 'column',
       padding: '0.8rem',
@@ -76,7 +89,7 @@ const Chat = () => {
       <div className="chat-messages" ref={chatContainerRef} style={{
         flex: 1,
         overflowY: 'auto',
-        marginBottom: '0.5rem',
+        marginBottom: '0.4rem',
         paddingRight: '4px',
         display: 'flex',
         flexDirection: 'column',
@@ -120,6 +133,51 @@ const Chat = () => {
           })
         )}
         <div ref={messagesEndRef} />
+      </div>
+
+      {/* Tactical Quick Radio Chips Strip */}
+      <div style={{
+        display: 'flex',
+        gap: '0.35rem',
+        overflowX: 'auto',
+        paddingBottom: '0.35rem',
+        marginBottom: '0.35rem',
+        scrollbarWidth: 'none'
+      }}>
+        {QUICK_RADIO_COMMS.map((radio) => (
+          <button
+            key={radio.id}
+            type="button"
+            className="mono"
+            onClick={() => handleSendQuickRadio(`${radio.icon} ${radio.label}`)}
+            style={{
+              whiteSpace: 'nowrap',
+              background: 'rgba(100, 255, 218, 0.08)',
+              border: '1px solid rgba(100, 255, 218, 0.25)',
+              color: 'var(--nav-teal)',
+              padding: '2px 7px',
+              borderRadius: '3px',
+              fontSize: '0.65rem',
+              cursor: 'pointer',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '4px',
+              transition: 'all 0.15s ease'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = 'rgba(100, 255, 218, 0.2)';
+              e.currentTarget.style.borderColor = 'var(--nav-teal)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = 'rgba(100, 255, 218, 0.08)';
+              e.currentTarget.style.borderColor = 'rgba(100, 255, 218, 0.25)';
+            }}
+            title={`Émettre: "${radio.label}"`}
+          >
+            <span>{radio.icon}</span>
+            <span>{radio.label}</span>
+          </button>
+        ))}
       </div>
 
       <form onSubmit={handleSendMessage} style={{ display: 'flex', gap: '0.5rem' }}>
