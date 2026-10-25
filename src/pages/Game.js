@@ -900,13 +900,51 @@ const Game = () => {
                 {!isSolo && isConnected ? (
                   <Chat />
                 ) : (
-                  <div className="tactical-panel" style={{ padding: '1rem', height: '180px', display: 'flex', flexDirection: 'column' }}>
-                    <div style={{ borderBottom: '1px solid var(--nav-teal)', paddingBottom: '0.4rem', marginBottom: '0.5rem', display: 'flex', justifyContent: 'space-between' }}>
-                      <span className="mono" style={{ color: 'var(--nav-teal)', fontWeight: 'bold', fontSize: '0.75rem' }}>COMMUNICATIONS TACTIQUES</span>
-                      <span className="status-indicator online" style={{ width: '6px', height: '6px' }} />
+                  <div className="tactical-panel" style={{ padding: '1.25rem', minHeight: '200px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                    <div>
+                      <div style={{ borderBottom: '1px solid var(--nav-gold)', paddingBottom: '0.4rem', marginBottom: '0.75rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <span className="status-indicator online blink-slow" style={{ background: 'var(--nav-gold)', boxShadow: '0 0 8px var(--nav-gold)', width: '7px', height: '7px' }} />
+                          <span className="mono" style={{ color: 'var(--nav-gold)', fontWeight: 'bold', fontSize: '0.78rem', letterSpacing: '1px' }}>
+                            TÉLÉMÉTRIE I.A. TACTIQUE
+                          </span>
+                        </div>
+                        <span className="mono" style={{ fontSize: '0.68rem', color: 'var(--nav-slate)', border: '1px solid rgba(255,204,0,0.3)', padding: '1px 6px', borderRadius: '3px' }}>
+                          {soloDifficulty.toUpperCase()}
+                        </span>
+                      </div>
+
+                      <div className="mono" style={{ fontSize: '0.76rem', color: 'var(--nav-text)', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginBottom: '0.75rem' }}>
+                        <div>
+                          <div style={{ color: 'var(--nav-slate)', fontSize: '0.65rem' }}>DOCTRINE NAVALE</div>
+                          <div style={{ color: 'var(--nav-gold)', fontWeight: 'bold', marginTop: '2px' }}>
+                            {soloDifficulty === 'admiral' ? 'DENSITÉ DE CHALEUR (MAX)' : soloDifficulty === 'veteran' ? 'DAMIER & TRAQUE ORTHO' : 'BALAYAGE LINÉAIRE'}
+                          </div>
+                        </div>
+
+                        <div>
+                          <div style={{ color: 'var(--nav-slate)', fontSize: '0.65rem' }}>PRÉCISION HOSTILE</div>
+                          <div style={{ color: 'var(--nav-text)', fontWeight: 'bold', marginTop: '2px' }}>
+                            {opponentShots.length > 0
+                              ? `${Math.round((opponentShots.filter(s => s.hit).length / opponentShots.length) * 100)}% (${opponentShots.filter(s => s.hit).length}/${opponentShots.length})`
+                              : '0% (0 salve)'}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="mono" style={{ fontSize: '0.72rem', background: 'rgba(255,204,0,0.06)', border: '1px solid rgba(255,204,0,0.18)', borderRadius: '4px', padding: '0.5rem 0.75rem' }}>
+                        <div style={{ color: 'var(--nav-slate)', fontSize: '0.62rem', marginBottom: '2px' }}>ÉTAT DU CALCULATEUR BALISTIQUE :</div>
+                        <div style={{ color: opponentShots.some(s => s.hit && !sunkAlliedShips.some(sh => sh.positions.some(p => p.x === s.x && p.y === s.y))) ? 'var(--nav-red)' : 'var(--nav-gold)' }}>
+                          {opponentShots.some(s => s.hit && !sunkAlliedShips.some(sh => sh.positions.some(p => p.x === s.x && p.y === s.y)))
+                            ? '🎯 CIBLE VERROUILLÉE — ALGORITHME EN PHASE D\'EXÉCUTION'
+                            : '📡 RECHERCHE RADAR ACTIVE — PARITÉ OPTIMISÉE'}
+                        </div>
+                      </div>
                     </div>
-                    <div className="mono" style={{ fontSize: '0.8rem', color: 'var(--nav-slate)', flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', textAlign: 'center' }}>
-                      Canal d'exercice crypté. I.A. tactique autonome active.
+
+                    <div className="mono" style={{ fontSize: '0.66rem', color: 'var(--nav-slate)', marginTop: '0.75rem', display: 'flex', justifyContent: 'space-between', borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '0.5rem' }}>
+                      <span>UNITÉS ALLIÉES DÉTRUITES : {sunkAlliedShips.length}/5</span>
+                      <span>UNITÉS HOSTILES DÉTRUITES : {sunkEnemyShips.length}/5</span>
                     </div>
                   </div>
                 )}

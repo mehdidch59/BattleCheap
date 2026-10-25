@@ -246,15 +246,22 @@ const Board = ({
                       </div>
                     )}
                     {cell?.hit && (
-                      <div className="hit-marker" title="Cible touchée">
+                      <div className="hit-marker" title="Cible touchée" aria-label="Touché">
                         <span className="explosion-glow" />
-                        ✕
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="var(--nav-red)" strokeWidth="2.5" strokeLinecap="round">
+                          <line x1="6" y1="6" x2="18" y2="18" />
+                          <line x1="6" y1="18" x2="18" y2="6" />
+                          <circle cx="12" cy="12" r="2" fill="var(--nav-red)" />
+                        </svg>
                       </div>
                     )}
                     {cell?.miss && (
-                      <div className="miss-marker" title="Tir dans l'eau">
+                      <div className="miss-marker" title="Tir dans l'eau" aria-label="Manqué">
                         <span className="splash-ripple" />
-                        •
+                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none">
+                          <circle cx="12" cy="12" r="3.5" fill="var(--nav-slate)" opacity="0.85" />
+                          <circle cx="12" cy="12" r="6" stroke="var(--nav-slate)" strokeWidth="1" strokeDasharray="2 2" opacity="0.6" />
+                        </svg>
                       </div>
                     )}
                   </button>

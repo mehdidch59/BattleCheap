@@ -482,6 +482,65 @@ class SoundManager {
     return this.ambiencePlaying;
   }
 
+  // Mechanical Ratchet Click (ship rotation in deployment)
+  playRatchetClick() {
+    if (this.isMuted) return;
+    this.ensureContext();
+    if (!this.ctx) return;
+
+    try {
+      const t = this.ctx.currentTime;
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(1100, t);
+      osc.frequency.exponentialRampToValueAtTime(320, t + 0.04);
+
+      gain.gain.setValueAtTime(0.22, t);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.04);
+
+      osc.connect(gain);
+      gain.connect(this.sfxGain);
+
+      osc.start(t);
+      osc.stop(t + 0.04);
+    } catch (e) {}
+  }
+
+  // Supersonic Salvo Streak (rocket boost / missile trajectory)
+  playMissileStreak() {
+    if (this.isMuted) return;
+    this.ensureContext();
+    if (!this.ctx) return;
+
+    try {
+      const t = this.ctx.currentTime;
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(320, t);
+      osc.frequency.exponentialRampToValueAtTime(1400, t + 0.3);
+
+      const filter = this.ctx.createBiquadFilter();
+      filter.type = 'bandpass';
+      filter.frequency.setValueAtTime(700, t);
+      filter.frequency.exponentialRampToValueAtTime(1600, t + 0.3);
+      filter.Q.setValueAtTime(2.5, t);
+
+      gain.gain.setValueAtTime(0.18, t);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.3);
+
+      osc.connect(filter);
+      filter.connect(gain);
+      gain.connect(this.sfxGain);
+
+      osc.start(t);
+      osc.stop(t + 0.3);
+    } catch (e) {}
+  }
+
   // Military radio squelch burst (short RF static + telemetry comms pip)
   playRadioTransmission() {
     if (this.isMuted) return;

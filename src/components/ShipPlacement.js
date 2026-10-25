@@ -17,7 +17,7 @@ const ShipPlacement = ({ onReady }) => {
 
   // Toggle orientation
   const handleRotate = () => {
-    sound.playBlip(720, 0.05);
+    sound.playRatchetClick();
     setOrientation(prev => prev === 'horizontal' ? 'vertical' : 'horizontal');
   };
 
@@ -150,10 +150,10 @@ const ShipPlacement = ({ onReady }) => {
     >
       <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
         <div className="mono" style={{ color: 'var(--nav-teal)', fontSize: '0.85rem', letterSpacing: '3px' }}>
-          STRATEGIC FLEET DISPOSITION
+          DISPOSITION STRATÉGIQUE DE L'ESCADRE
         </div>
         <h2 style={{ color: 'var(--nav-text)', margin: '0.2rem 0', fontSize: '2rem' }}>
-          WARSHIP DEPLOYMENT
+          DÉPLOIEMENT DES BÂTIMENTS
         </h2>
         <p className="mono" style={{ color: 'var(--nav-slate)', fontSize: '0.85rem', margin: 0 }}>
           {currentShip

@@ -8,6 +8,7 @@ import { getRank } from '../utils/ranks';
 import { CAMOUFLAGES, getActiveCamouflage, setActiveCamouflage } from '../utils/camouflages';
 import RankInsignia from './RankInsignia';
 import TacticalManualModal from './TacticalManualModal';
+import LiquidLogo from './LiquidLogo';
 import { SoundOnIcon, SoundMuteIcon } from './TacticalIcons';
 
 const Header = () => {
@@ -90,21 +91,14 @@ const Header = () => {
   return (
     <header className="navbar">
       <div className="container" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem' }}>
-        {/* Brand Logo with Radar Ping */}
+        {/* Brand Logo with Liquid Refractive Radar (paper-design/liquid-logo) */}
         <Link
           to="/"
           className="logo"
           onClick={() => { sound.playSonarPing(); }}
-          style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+          style={{ display: 'flex', alignItems: 'center', gap: '10px' }}
         >
-          <span className="logo-radar-icon">
-            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="var(--nav-teal)" strokeWidth="2">
-              <circle cx="12" cy="12" r="10" />
-              <circle cx="12" cy="12" r="6" strokeDasharray="3 3" />
-              <circle cx="12" cy="12" r="2" fill="var(--nav-teal)" />
-              <line x1="12" y1="12" x2="20" y2="4" stroke="var(--nav-teal)" strokeWidth="1.5" />
-            </svg>
-          </span>
+          <LiquidLogo size={28} />
           <span className="logo-brand-text">BATTLECHEAP</span>
         </Link>
 
@@ -138,6 +132,11 @@ const Header = () => {
             >
               {isMuted ? <SoundMuteIcon size={16} color="var(--nav-red)" /> : <SoundOnIcon size={16} color="var(--nav-teal)" />}
               <span className="mono" style={{ fontSize: '0.75rem' }}>{Math.round(masterVol * 100)}%</span>
+              <div className={`audio-equalizer ${isMuted ? 'muted' : 'active'}`} aria-hidden="true">
+                <span className="eq-bar" />
+                <span className="eq-bar" />
+                <span className="eq-bar" />
+              </div>
             </button>
 
             {/* Quick Settings Dropdown */}
