@@ -363,6 +363,51 @@ io.on('connection', (socket) => {
     }
   });
 
+  // Demande de revanche immédiate (Multijoueur)
+  socket.on('requestRematch', () => {
+    if (!checkSocketRateLimit(socket)) return;
+    const user = users.get(socket.id);
+    if (!user || !user.roomId) return;
+    const room = rooms.get(user.roomId);
+    if (!room || room.gameState.status !== 'gameOver') return;
+
+    if (!room.rematchRequests) {
+      room.rematchRequests = new Set();
+    }
+    room.rematchRequests.add(socket.id);
+
+    // Notifier l'adversaire
+    socket.to(user.roomId).emit('rematchRequested', {
+      sender: user.username
+    });
+
+    // Si les deux joueurs acceptent la revanche : réinitialisation de la salle
+    if (room.rematchRequests.size >= 2) {
+      room.rematchRequests.clear();
+      room.gameState = {
+        status: 'waiting',
+        turn: null,
+        player1Ready: false,
+        player2Ready: false,
+        board1: null,
+        board2: null,
+        shots: { 0: new Set(), 1: new Set() }
+      };
+      io.to(user.roomId).emit('rematchStart');
+    }
+  });
+
+  // Rejet de la demande de revanche
+  socket.on('declineRematch', () => {
+    const user = users.get(socket.id);
+    if (!user || !user.roomId) return;
+    const room = rooms.get(user.roomId);
+    if (room && room.rematchRequests) {
+      room.rematchRequests.clear();
+      socket.to(user.roomId).emit('rematchDeclined');
+    }
+  });
+
   // Déconnexion propre
   socket.on('disconnect', () => {
     socketRateLimits.delete(socket.id);

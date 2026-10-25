@@ -8,6 +8,8 @@ import FleetArsenal from '../components/FleetArsenal';
 import { db } from '../firebase/config';
 import { doc, getDoc } from 'firebase/firestore';
 import { sound } from '../utils/audio';
+import { getRankProgress } from '../utils/ranks';
+import RankInsignia from '../components/RankInsignia';
 import {
   RadarIcon,
   AiChipIcon,
@@ -88,6 +90,8 @@ const Home = () => {
           if (docSnap.exists() && docSnap.data().history) {
             const sortedHistory = docSnap.data().history.sort((a, b) => new Date(b.date) - new Date(a.date));
             setHistory(sortedHistory);
+            const w = sortedHistory.filter(g => g.result === 'WIN').length;
+            localStorage.setItem(`bc_wins_${currentUser.uid}`, w.toString());
           }
         } catch (err) {
           console.error('Error fetching history:', err);
@@ -180,11 +184,12 @@ const Home = () => {
     emit('joinRoom', { roomId: joinRoomId.trim(), username });
   };
 
-  // Calculate career statistics
+  // Calculate career statistics & military rank progression
   const totalGames = history.length;
   const wins = history.filter(g => g.result === 'WIN').length;
   const losses = totalGames - wins;
   const winRate = totalGames > 0 ? Math.round((wins / totalGames) * 100) : 0;
+  const rankData = getRankProgress(wins);
 
   return (
     <div>
@@ -427,18 +432,69 @@ const Home = () => {
             {currentUser ? (
               <div className="career-bento-inner">
                 <div className="career-bento-header">
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                    <WinRateDial rate={winRate} />
-                    <div>
-                      <div className="mono" style={{ color: 'var(--nav-teal)', fontSize: '0.75rem', letterSpacing: '1px' }}>
-                        REGISTRE DU COMMANDANT
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem', flexWrap: 'wrap' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
+                      <div
+                        style={{
+                          background: rankData.currentRank.badgeBg,
+                          border: `1.5px solid ${rankData.currentRank.badgeBorder}`,
+                          borderRadius: '8px',
+                          padding: '6px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          boxShadow: `0 0 15px ${rankData.currentRank.badgeBg}`
+                        }}
+                        title={`${rankData.currentRank.title} (${rankData.currentRank.code})`}
+                      >
+                        <RankInsignia rankId={rankData.currentRank.id} size={42} />
                       </div>
-                      <h4 style={{ margin: '3px 0 0', color: 'var(--nav-text)', fontSize: '1.1rem', letterSpacing: '1px' }}>
+                      <WinRateDial rate={winRate} />
+                    </div>
+
+                    <div style={{ flex: 1, minWidth: '220px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <span className="mono" style={{ color: 'var(--nav-teal)', fontSize: '0.72rem', letterSpacing: '1px' }}>
+                          REGISTRE DU COMMANDANT
+                        </span>
+                        <span
+                          className="mono"
+                          style={{
+                            fontSize: '0.65rem',
+                            color: rankData.currentRank.color,
+                            border: `1px solid ${rankData.currentRank.badgeBorder}`,
+                            background: rankData.currentRank.badgeBg,
+                            padding: '1px 6px',
+                            borderRadius: '3px',
+                            fontWeight: 'bold'
+                          }}
+                        >
+                          {rankData.currentRank.code}
+                        </span>
+                      </div>
+                      <h4 style={{ margin: '3px 0 2px', color: 'var(--nav-text)', fontSize: '1.15rem', letterSpacing: '1px' }}>
                         {currentUser.displayName || currentUser.email}
                       </h4>
-                      <div className="mono" style={{ color: 'var(--nav-slate)', fontSize: '0.7rem', marginTop: '2px' }}>
-                        GRADE : {wins >= 10 ? 'AMIRAL D\'ESCADRE' : wins >= 5 ? 'CAPITAINE DE VAISSEAU' : 'ENSEIGNE DE COMBAT'}
+                      <div className="mono" style={{ color: rankData.currentRank.color, fontSize: '0.75rem', fontWeight: 600 }}>
+                        {rankData.currentRank.title}
                       </div>
+
+                      {/* Rank Promotion Progress Bar */}
+                      {rankData.nextRank ? (
+                        <div style={{ marginTop: '0.6rem', maxWidth: '300px' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.65rem', marginBottom: '3px' }} className="mono">
+                            <span style={{ color: 'var(--nav-slate)' }}>VERS {rankData.nextRank.shortTitle}</span>
+                            <span style={{ color: rankData.currentRank.color }}>{rankData.progress}% ({rankData.remaining} vict. requise{rankData.remaining > 1 ? 's' : ''})</span>
+                          </div>
+                          <div style={{ height: '4px', background: 'rgba(255,255,255,0.08)', borderRadius: '2px', overflow: 'hidden' }}>
+                            <div style={{ width: `${rankData.progress}%`, height: '100%', background: rankData.currentRank.color, transition: 'width 0.8s ease' }} />
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="mono" style={{ fontSize: '0.65rem', color: 'var(--nav-teal)', marginTop: '0.4rem' }}>
+                          ★ RANG SUPRÊME ATTEINT (ÉTAT-MAJOR)
+                        </div>
+                      )}
                     </div>
                   </div>
 

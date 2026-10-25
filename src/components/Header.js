@@ -1,7 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { db } from '../firebase/config';
+import { doc, getDoc } from 'firebase/firestore';
 import { sound } from '../utils/audio';
+import { getRank } from '../utils/ranks';
+import RankInsignia from './RankInsignia';
 import { SoundOnIcon, SoundMuteIcon } from './TacticalIcons';
 
 const Header = () => {
@@ -12,6 +16,34 @@ const Header = () => {
   const [showSettings, setShowSettings] = useState(false);
   const [masterVol, setMasterVol] = useState(sound.masterVolume);
   const [shakeDisabled, setShakeDisabled] = useState(localStorage.getItem('bc_disable_shake') === 'true');
+  const [ambiencePlaying, setAmbiencePlaying] = useState(sound.ambiencePlaying);
+
+  const [userWins, setUserWins] = useState(() => {
+    if (currentUser?.uid) {
+      return parseInt(localStorage.getItem(`bc_wins_${currentUser.uid}`) || '0', 10);
+    }
+    return 0;
+  });
+
+  useEffect(() => {
+    if (!currentUser) return;
+    const fetchWins = async () => {
+      try {
+        const docRef = doc(db, 'users', currentUser.uid);
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists() && docSnap.data().history) {
+          const w = docSnap.data().history.filter(g => g.result === 'WIN').length;
+          setUserWins(w);
+          localStorage.setItem(`bc_wins_${currentUser.uid}`, w.toString());
+        }
+      } catch (e) {
+        // Non-blocking fetch
+      }
+    };
+    fetchWins();
+  }, [currentUser]);
+
+  const currentRank = getRank(userWins);
 
   const handleLogout = async () => {
     sound.playBlip();
@@ -137,6 +169,23 @@ const Header = () => {
                   </button>
                 </div>
 
+                <div style={{ borderTop: '1px solid var(--nav-lighter)', paddingTop: '0.75rem', marginBottom: '0.75rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div>
+                    <div className="mono" style={{ fontSize: '0.72rem', color: 'var(--nav-text)' }}>AMBIANCE SOUS-MARINE</div>
+                    <div className="mono" style={{ fontSize: '0.62rem', color: 'var(--nav-slate)' }}>Acoustique 55Hz & battement 3Hz</div>
+                  </div>
+                  <button
+                    onClick={() => {
+                      const active = sound.toggleAmbience();
+                      setAmbiencePlaying(active);
+                    }}
+                    className={`btn ${ambiencePlaying ? 'btn-primary' : 'btn-secondary'}`}
+                    style={{ padding: '0.25rem 0.6rem', fontSize: '0.7rem' }}
+                  >
+                    {ambiencePlaying ? 'ACTIF' : 'INACTIF'}
+                  </button>
+                </div>
+
                 <div style={{ borderTop: '1px solid var(--nav-lighter)', paddingTop: '0.75rem' }}>
                   <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '0.75rem', color: 'var(--nav-text)' }}>
                     <input
@@ -155,10 +204,28 @@ const Header = () => {
           {/* User Auth Info */}
           {currentUser ? (
             <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
-              <div style={{ textAlign: 'right', fontSize: '0.75rem' }}>
-                <div style={{ color: 'var(--nav-slate)', fontSize: '0.65rem' }}>COMMANDANT</div>
-                <div className="mono" style={{ color: 'var(--nav-teal)', fontWeight: 'bold' }}>
-                  {currentUser.displayName || currentUser.email}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    background: currentRank.badgeBg,
+                    border: `1px solid ${currentRank.badgeBorder}`,
+                    borderRadius: '4px',
+                    padding: '3px'
+                  }}
+                  title={`${currentRank.title} (${currentRank.code}) - ${userWins} victoires`}
+                >
+                  <RankInsignia rankId={currentRank.id} size={28} />
+                </div>
+                <div style={{ textAlign: 'right', fontSize: '0.75rem' }}>
+                  <div className="mono" style={{ color: currentRank.color, fontSize: '0.62rem', fontWeight: 600, letterSpacing: '0.5px' }}>
+                    {currentRank.shortTitle} • {currentRank.code}
+                  </div>
+                  <div className="mono" style={{ color: 'var(--nav-text)', fontWeight: 'bold' }}>
+                    {currentUser.displayName || currentUser.email}
+                  </div>
                 </div>
               </div>
               <button

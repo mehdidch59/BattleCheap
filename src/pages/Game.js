@@ -13,6 +13,7 @@ import { doc, updateDoc, arrayUnion } from 'firebase/firestore';
 import { sound } from '../utils/audio';
 import { SHIPS_CONFIG, TacticalAI, generateRandomFleet, findJustSunkShip } from '../utils/gameAI';
 import { MedalIcon, SkullIcon, CrosshairIcon, ShieldIcon, ClipboardIcon, LinkIcon, FlagIcon, SoundWaveIcon } from '../components/TacticalIcons';
+import VictoryCelebration from '../components/VictoryCelebration';
 
 const LETTERS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'];
 
@@ -39,6 +40,11 @@ const Game = () => {
   const [opponentName, setOpponentName] = useState(isSolo ? `I.A. TACTIQUE (${soloDifficulty.toUpperCase()})` : '');
   const [copiedText, setCopiedText] = useState('');
   const [ambienceActive, setAmbienceActive] = useState(sound.ambiencePlaying);
+
+  // Rematch State (Multiplayer)
+  const [rematchRequestedByOpponent, setRematchRequestedByOpponent] = useState(false);
+  const [rematchSent, setRematchSent] = useState(false);
+  const [rematchDeclined, setRematchDeclined] = useState(false);
   
   // Mobile active tab: 'offensive' | 'defensive'
   const [activeTab, setActiveTab] = useState('offensive');
@@ -278,11 +284,36 @@ const Game = () => {
         await updateDoc(doc(db, 'users', currentUser.uid), {
           history: arrayUnion(gameResult)
         });
+
+        if (isWin) {
+          const curWins = parseInt(localStorage.getItem(`bc_wins_${currentUser.uid}`) || '0', 10);
+          localStorage.setItem(`bc_wins_${currentUser.uid}`, (curWins + 1).toString());
+        }
       } catch (err) {
         console.error('Error saving game history:', err);
       }
     }
   }, [addCombatLog, currentUser, isSolo, opponentName, roomId]);
+
+  // Restart solo game cleanly without full reload
+  const handleRestartSolo = () => {
+    sound.playSonarPing();
+    aiRef.current = new TacticalAI(soloDifficulty);
+    setGameOver(false);
+    setWinner(false);
+    setGameStarted(false);
+    setIsReady(false);
+    setIsPlayerTurn(false);
+    setShips([]);
+    setEnemyShips(SHIPS_CONFIG);
+    setMyShots([]);
+    setOpponentShots([]);
+    setSunkEnemyShips([]);
+    setSunkAlliedShips([]);
+    setTurnCount(1);
+    setMessage('Nouvelle simulation ! Déployez votre flotte.');
+    addCombatLog(`Nouvelle simulation solo initialisée (${soloDifficulty.toUpperCase()})`, 'info');
+  };
 
   // Multiplayer Socket.io Event Listeners
   useEffect(() => {
@@ -395,10 +426,49 @@ const Game = () => {
       setPlayerId(assignedPlayerId);
     };
 
-    on('roomCreated', handleRoomCreated);
-    on('roomJoined', handleRoomJoined);
-    on('opponentLeft', unsubscribeOpponentLeft);
-    on('roomNotFound', unsubscribeRoomNotFound);
+    const unsubscribeRematchRequested = on('rematchRequested', ({ sender }) => {
+      sound.playSonarPing();
+      setRematchRequestedByOpponent(true);
+      triggerBanner(`DEMANDE DE REVANCHE DE ${sender || "L'ADVERSAIRE"} !`, 'info');
+      addCombatLog(`L'adversaire (${sender || 'hostile'}) propose une revanche immédiate.`, 'info');
+    });
+
+    const unsubscribeRematchDeclined = on('rematchDeclined', () => {
+      sound.playBlip(220, 0.15);
+      setRematchDeclined(true);
+      setRematchSent(false);
+      triggerBanner(`DEMANDE DE REVANCHE DÉCLINÉE PAR L'ADVERSAIRE`, 'warning');
+      addCombatLog(`La demande de revanche a été déclinée par l'adversaire.`, 'info');
+    });
+
+    const unsubscribeRematchStart = on('rematchStart', () => {
+      sound.playSonarPing();
+      triggerBanner(`REVANCHE VALIDÉE ! REDÉPLOIEMENT TACTIQUE`, 'info');
+      addCombatLog(`Revanche acceptée ! Redéploiement tactique de la flotte.`, 'info');
+
+      // Reset state for new match
+      setGameOver(false);
+      setWinner(false);
+      setGameStarted(false);
+      setIsReady(false);
+      setIsPlayerTurn(false);
+      setShips([]);
+      setEnemyShips(SHIPS_CONFIG);
+      setMyShots([]);
+      setOpponentShots([]);
+      setSunkEnemyShips([]);
+      setSunkAlliedShips([]);
+      setTurnCount(1);
+      setRematchRequestedByOpponent(false);
+      setRematchSent(false);
+      setRematchDeclined(false);
+      setMessage('Nouvelle bataille ! Placez vos navires et préparez-vous au combat.');
+    });
+
+    const unsubscribeRoomCreated = on('roomCreated', handleRoomCreated);
+    const unsubscribeRoomJoined = on('roomJoined', handleRoomJoined);
+    const unsubscribeOpponentLeftEv = on('opponentLeft', unsubscribeOpponentLeft);
+    const unsubscribeRoomNotFoundEv = on('roomNotFound', unsubscribeRoomNotFound);
 
     return () => {
       unsubscribePlayerJoined();
@@ -406,6 +476,13 @@ const Game = () => {
       unsubscribeGameStart();
       unsubscribeShotResult();
       unsubscribeGameOver();
+      unsubscribeRematchRequested();
+      unsubscribeRematchDeclined();
+      unsubscribeRematchStart();
+      unsubscribeRoomCreated();
+      unsubscribeRoomJoined();
+      unsubscribeOpponentLeftEv();
+      unsubscribeRoomNotFoundEv();
     };
   }, [roomId, isSolo, isConnected, emit, on, playerId, isReady, currentUser, navigate, addCombatLog, addTrauma, handleGameOver]);
 
@@ -665,7 +742,8 @@ const Game = () => {
         {/* Game Over Debriefing Modal */}
         {gameOver && (
           <div className="modal-backdrop">
-            <div className="tactical-panel debrief-modal" style={{ maxWidth: '520px', width: '90%', textAlign: 'center', padding: '2rem' }}>
+            {winner && <VictoryCelebration />}
+            <div className="tactical-panel debrief-modal" style={{ maxWidth: '520px', width: '90%', textAlign: 'center', padding: '2rem', position: 'relative', zIndex: 1100 }}>
               <div style={{ marginBottom: '1rem', display: 'flex', justifyContent: 'center' }}>
                 {winner ? (
                   <div style={{
@@ -742,28 +820,112 @@ const Game = () => {
                 </div>
               </div>
 
-              <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
+              {/* Rematch Alerts (Multiplayer) */}
+              {!isSolo && (
+                <div style={{ marginBottom: '1.25rem' }}>
+                  {rematchRequestedByOpponent && !rematchSent && (
+                    <div style={{
+                      background: 'rgba(100, 255, 218, 0.12)',
+                      border: '1px solid var(--nav-teal)',
+                      borderRadius: '4px',
+                      padding: '0.85rem',
+                      textAlign: 'center'
+                    }}>
+                      <div className="mono" style={{ color: 'var(--nav-teal)', fontWeight: 'bold', fontSize: '0.82rem', marginBottom: '0.6rem' }}>
+                        ⚔️ L'OFFICIER ADVERSE DEMANDE UNE REVANCHE IMMÉDIATE !
+                      </div>
+                      <div style={{ display: 'flex', gap: '0.6rem', justifyContent: 'center' }}>
+                        <button
+                          className="btn btn-primary"
+                          onClick={() => {
+                            sound.playSonarPing();
+                            emit('requestRematch');
+                            setRematchSent(true);
+                          }}
+                          style={{ padding: '0.45rem 1rem', fontSize: '0.8rem' }}
+                        >
+                          ACCEPTER LA REVANCHE
+                        </button>
+                        <button
+                          className="btn btn-secondary"
+                          onClick={() => {
+                            sound.playBlip();
+                            setRematchRequestedByOpponent(false);
+                            emit('declineRematch');
+                          }}
+                          style={{ padding: '0.45rem 1rem', fontSize: '0.8rem' }}
+                        >
+                          DÉCLINER
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {rematchSent && !rematchDeclined && (
+                    <div className="mono" style={{
+                      background: 'rgba(255, 204, 0, 0.12)',
+                      border: '1px solid var(--nav-gold)',
+                      color: 'var(--nav-gold)',
+                      padding: '0.75rem',
+                      borderRadius: '4px',
+                      fontSize: '0.78rem',
+                      textAlign: 'center'
+                    }}>
+                      ⏳ DEMANDE DE REVANCHE TRANSMISE... EN ATTENTE DE L'ADVERSAIRE
+                    </div>
+                  )}
+
+                  {rematchDeclined && (
+                    <div className="mono" style={{
+                      background: 'rgba(255, 71, 87, 0.12)',
+                      border: '1px solid var(--nav-red)',
+                      color: 'var(--nav-red)',
+                      padding: '0.75rem',
+                      borderRadius: '4px',
+                      fontSize: '0.78rem',
+                      textAlign: 'center'
+                    }}>
+                      L'ADVERSAIRE A DÉCLINÉ LA REVANCHE.
+                    </div>
+                  )}
+                </div>
+              )}
+
+              <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center', flexWrap: 'wrap' }}>
                 <button
-                  className="btn btn-primary"
+                  className="btn btn-secondary"
                   onClick={() => {
                     sound.playBlip();
                     navigate('/');
                   }}
-                  style={{ flex: 1 }}
+                  style={{ flex: 1, minWidth: '140px' }}
                 >
                   RETOUR AU Q.G.
                 </button>
-                {isSolo && (
+                {isSolo ? (
                   <button
-                    className="btn btn-secondary"
-                    onClick={() => {
-                      sound.playBlip();
-                      window.location.reload();
-                    }}
-                    style={{ flex: 1 }}
+                    className="btn btn-primary"
+                    onClick={handleRestartSolo}
+                    style={{ flex: 1, minWidth: '140px' }}
                   >
                     NOUVELLE SIMULATION
                   </button>
+                ) : (
+                  !rematchSent && !rematchRequestedByOpponent && (
+                    <button
+                      className="btn btn-primary"
+                      onClick={() => {
+                        sound.playSonarPing();
+                        setRematchSent(true);
+                        setRematchDeclined(false);
+                        emit('requestRematch');
+                        addCombatLog('Demande de revanche transmise à l\'adversaire...', 'info');
+                      }}
+                      style={{ flex: 1, minWidth: '140px' }}
+                    >
+                      ⚔️ DEMANDER REVANCHE
+                    </button>
+                  )
                 )}
               </div>
             </div>
