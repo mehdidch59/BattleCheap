@@ -248,17 +248,17 @@ class SoundManager {
     } catch (e) {}
   }
 
-  // Ship Sunk (Heavy depth charge + alarm klaxon)
+  // Ship Sunk (Heavy depth charge + alarm klaxon + underwater bubble gurgle & hull stress)
   playShipSunk() {
     if (this.isMuted) return;
     this.ensureContext();
     if (!this.ctx) return;
 
     try {
-      // Big explosion first
+      // 1. Big depth charge explosion
       this.playExplosion();
 
-      // Dual siren tone after 100ms
+      // 2. Dual siren tone
       const t = this.ctx.currentTime + 0.1;
       [440, 554, 659].forEach((freq, i) => {
         const osc = this.ctx.createOscillator();
@@ -276,6 +276,29 @@ class SoundManager {
         osc.start(t + i * 0.12);
         osc.stop(t + i * 0.12 + 0.3);
       });
+
+      // 3. Sinking underwater bubbles & hull stress creak
+      const tBubble = t + 0.35;
+      const bubbleCount = 4;
+      for (let b = 0; b < bubbleCount; b++) {
+        const bubbleOsc = this.ctx.createOscillator();
+        const bubbleGain = this.ctx.createGain();
+        const bStart = tBubble + b * 0.12;
+
+        bubbleOsc.type = 'sine';
+        // Rising frequency bubble sweep
+        bubbleOsc.frequency.setValueAtTime(220 + b * 60, bStart);
+        bubbleOsc.frequency.exponentialRampToValueAtTime(580 + b * 110, bStart + 0.14);
+
+        bubbleGain.gain.setValueAtTime(0.16, bStart);
+        bubbleGain.gain.exponentialRampToValueAtTime(0.001, bStart + 0.14);
+
+        bubbleOsc.connect(bubbleGain);
+        bubbleGain.connect(this.sfxGain);
+
+        bubbleOsc.start(bStart);
+        bubbleOsc.stop(bStart + 0.14);
+      }
     } catch (e) {}
   }
 

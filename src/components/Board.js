@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { sound } from '../utils/audio';
+import { getActiveCamouflage } from '../utils/camouflages';
 
 const LETTERS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'];
 const NUMBERS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
@@ -14,6 +15,7 @@ const Board = ({
   sunkShips = []
 }) => {
   const [hoverCoord, setHoverCoord] = useState(null);
+  const camo = getActiveCamouflage();
 
   // Initialize 10x10 matrix
   const grid = Array(10).fill(null).map(() => Array(10).fill(null));
@@ -216,10 +218,17 @@ const Board = ({
                 if (sunk) cellClass += ' sunk-cell';
                 if (isTargetable) cellClass += ' targetable';
 
+                const shipCamoStyle = (isPlayerBoard && cell?.isShip && !cell?.hit) ? {
+                  background: camo.shipFill,
+                  borderColor: camo.shipBorder,
+                  boxShadow: `inset 0 0 8px ${camo.color}55`
+                } : {};
+
                 return (
                   <button
                     key={`${x}-${y}`}
                     className={cellClass}
+                    style={shipCamoStyle}
                     onClick={() => handleClick(x, y)}
                     onMouseEnter={() => handleMouseEnter(x, y)}
                     onKeyDown={(e) => handleKeyDown(e, x, y)}

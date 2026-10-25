@@ -5,7 +5,9 @@ import { db } from '../firebase/config';
 import { doc, getDoc } from 'firebase/firestore';
 import { sound } from '../utils/audio';
 import { getRank } from '../utils/ranks';
+import { CAMOUFLAGES, getActiveCamouflage, setActiveCamouflage } from '../utils/camouflages';
 import RankInsignia from './RankInsignia';
+import TacticalManualModal from './TacticalManualModal';
 import { SoundOnIcon, SoundMuteIcon } from './TacticalIcons';
 
 const Header = () => {
@@ -14,9 +16,15 @@ const Header = () => {
 
   const [isMuted, setIsMuted] = useState(sound.isMuted);
   const [showSettings, setShowSettings] = useState(false);
+  const [showManual, setShowManual] = useState(false);
   const [masterVol, setMasterVol] = useState(sound.masterVolume);
   const [shakeDisabled, setShakeDisabled] = useState(localStorage.getItem('bc_disable_shake') === 'true');
   const [ambiencePlaying, setAmbiencePlaying] = useState(sound.ambiencePlaying);
+  const [currentCamo, setCurrentCamo] = useState(getActiveCamouflage());
+
+  const [guestCallsign, setGuestCallsign] = useState(() => {
+    return localStorage.getItem('bc_guest_callsign') || 'Commandant Invité';
+  });
 
   const [userWins, setUserWins] = useState(() => {
     if (currentUser?.uid) {
@@ -101,7 +109,21 @@ const Header = () => {
         </Link>
 
         {/* Tactical Controls & Navigation */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+          {/* Tactical Manual Field Guide Button */}
+          <button
+            onClick={() => {
+              sound.playBlip();
+              setShowManual(true);
+            }}
+            className="btn btn-secondary mono"
+            style={{ padding: '0.4rem 0.75rem', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '5px' }}
+            title="Consulter le manuel de commandement et règles d'engagement"
+          >
+            <span>📜</span>
+            <span>MANUEL</span>
+          </button>
+
           {/* Audio & Settings Popover Toggle */}
           <div style={{ position: 'relative' }}>
             <button
@@ -126,7 +148,7 @@ const Header = () => {
                   position: 'absolute',
                   top: '120%',
                   right: 0,
-                  width: '240px',
+                  width: '260px',
                   zIndex: 200,
                   padding: '1rem',
                   boxShadow: '0 10px 30px rgba(0,0,0,0.8)'
@@ -169,10 +191,11 @@ const Header = () => {
                   </button>
                 </div>
 
+                {/* Submarine Ambience */}
                 <div style={{ borderTop: '1px solid var(--nav-lighter)', paddingTop: '0.75rem', marginBottom: '0.75rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <div>
-                    <div className="mono" style={{ fontSize: '0.72rem', color: 'var(--nav-text)' }}>AMBIANCE SOUS-MARINE</div>
-                    <div className="mono" style={{ fontSize: '0.62rem', color: 'var(--nav-slate)' }}>Acoustique 55Hz & battement 3Hz</div>
+                    <div className="mono" style={{ fontSize: '0.72rem', color: 'var(--nav-text)' }}>AMBIANCE 55Hz</div>
+                    <div className="mono" style={{ fontSize: '0.62rem', color: 'var(--nav-slate)' }}>Drone sub-bass & battement 3Hz</div>
                   </div>
                   <button
                     onClick={() => {
@@ -184,6 +207,46 @@ const Header = () => {
                   >
                     {ambiencePlaying ? 'ACTIF' : 'INACTIF'}
                   </button>
+                </div>
+
+                {/* Fleet Camouflage Selector */}
+                <div style={{ borderTop: '1px solid var(--nav-lighter)', paddingTop: '0.75rem', marginBottom: '0.75rem' }}>
+                  <div className="mono" style={{ fontSize: '0.72rem', color: 'var(--nav-text)', marginBottom: '0.4rem' }}>
+                    LIVRÉE DE FLOTTE (CAMOUFLAGE)
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.35rem' }}>
+                    {CAMOUFLAGES.map(c => {
+                      const isSel = currentCamo.id === c.id;
+                      return (
+                        <button
+                          key={c.id}
+                          type="button"
+                          onClick={() => {
+                            sound.playBlip(750, 0.04);
+                            const updated = setActiveCamouflage(c.id);
+                            setCurrentCamo(updated);
+                          }}
+                          className="mono"
+                          style={{
+                            padding: '0.3rem 0.4rem',
+                            fontSize: '0.66rem',
+                            background: isSel ? `${c.color}22` : 'rgba(2, 12, 27, 0.6)',
+                            border: `1px solid ${isSel ? c.color : 'rgba(136, 146, 176, 0.2)'}`,
+                            color: isSel ? c.color : 'var(--nav-slate)',
+                            borderRadius: '3px',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '5px',
+                            textAlign: 'left'
+                          }}
+                        >
+                          <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: c.color, flexShrink: 0 }} />
+                          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.name.split(' ')[1] || c.name}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
 
                 <div style={{ borderTop: '1px solid var(--nav-lighter)', paddingTop: '0.75rem' }}>
@@ -237,12 +300,43 @@ const Header = () => {
               </button>
             </div>
           ) : (
-            <div style={{ display: 'flex', gap: '0.5rem' }}>
+            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+              {/* Guest Callsign Selector */}
+              <button
+                type="button"
+                onClick={() => {
+                  const newName = window.prompt('ENTREZ VOTRE INDICATIF DE GUERRE (MAX 16 CARACTÈRES) :', guestCallsign);
+                  if (newName && newName.trim()) {
+                    const cleaned = newName.trim().slice(0, 16);
+                    setGuestCallsign(cleaned);
+                    localStorage.setItem('bc_guest_callsign', cleaned);
+                    sound.playSonarPing();
+                  }
+                }}
+                className="mono"
+                style={{
+                  background: 'rgba(255, 204, 0, 0.08)',
+                  border: '1px solid rgba(255, 204, 0, 0.35)',
+                  color: 'var(--nav-gold)',
+                  padding: '0.35rem 0.65rem',
+                  borderRadius: '3px',
+                  fontSize: '0.72rem',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px'
+                }}
+                title="Cliquer pour modifier votre indicatif d'officier"
+              >
+                <span>🪪</span>
+                <span>{guestCallsign}</span>
+                <span style={{ opacity: 0.6, fontSize: '0.65rem' }}>✎</span>
+              </button>
               <Link
                 to="/login"
                 className="btn btn-primary"
                 onClick={() => sound.playBlip()}
-                style={{ padding: '0.4rem 1rem', fontSize: '0.8rem', textDecoration: 'none' }}
+                style={{ padding: '0.4rem 0.9rem', fontSize: '0.8rem', textDecoration: 'none' }}
               >
                 CONNEXION
               </Link>
@@ -250,7 +344,7 @@ const Header = () => {
                 to="/register"
                 className="btn btn-secondary"
                 onClick={() => sound.playBlip()}
-                style={{ padding: '0.4rem 1rem', fontSize: '0.8rem', textDecoration: 'none' }}
+                style={{ padding: '0.4rem 0.9rem', fontSize: '0.8rem', textDecoration: 'none' }}
               >
                 REGISTRE
               </Link>
@@ -258,6 +352,11 @@ const Header = () => {
           )}
         </div>
       </div>
+
+      {/* Tactical Manual Modal */}
+      {showManual && (
+        <TacticalManualModal onClose={() => setShowManual(false)} />
+      )}
     </header>
   );
 };

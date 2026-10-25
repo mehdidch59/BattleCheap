@@ -10,6 +10,7 @@ import { doc, getDoc } from 'firebase/firestore';
 import { sound } from '../utils/audio';
 import { getRankProgress } from '../utils/ranks';
 import RankInsignia from '../components/RankInsignia';
+import MedalRack from '../components/MedalRack';
 import {
   RadarIcon,
   AiChipIcon,
@@ -515,6 +516,9 @@ const Home = () => {
                   </div>
                 </div>
 
+                {/* Campaign Achievements Rack */}
+                <MedalRack userId={currentUser.uid} />
+
                 {/* History Mission Log */}
                 {history.length === 0 ? (
                   <div className="mono" style={{ textAlign: 'center', color: 'var(--nav-slate)', padding: '2rem 0', fontStyle: 'italic', fontSize: '0.82rem' }}>
@@ -575,7 +579,7 @@ const Home = () => {
                   </div>
                 </div>
 
-                <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1rem' }}>
+                <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1rem', marginBottom: '1.25rem' }}>
                   <Link
                     to="/login"
                     className="btn btn-primary"
@@ -593,6 +597,9 @@ const Home = () => {
                     ENRÔLEMENT
                   </Link>
                 </div>
+
+                {/* Guest Campaign Medals Showcase */}
+                <MedalRack userId="guest" />
               </div>
             )}
           </div>

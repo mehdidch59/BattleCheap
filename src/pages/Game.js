@@ -14,6 +14,7 @@ import { sound } from '../utils/audio';
 import { SHIPS_CONFIG, TacticalAI, generateRandomFleet, findJustSunkShip } from '../utils/gameAI';
 import { MedalIcon, SkullIcon, CrosshairIcon, ShieldIcon, ClipboardIcon, LinkIcon, FlagIcon, SoundWaveIcon } from '../components/TacticalIcons';
 import VictoryCelebration from '../components/VictoryCelebration';
+import { evaluateCombatMedals } from '../utils/achievements';
 
 const LETTERS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'];
 
@@ -46,6 +47,10 @@ const Game = () => {
   const [rematchSent, setRematchSent] = useState(false);
   const [rematchDeclined, setRematchDeclined] = useState(false);
   const [debriefCopied, setDebriefCopied] = useState(false);
+  const [turnTimeLeft, setTurnTimeLeft] = useState(45);
+
+  const guestCallsign = localStorage.getItem('bc_guest_callsign') || 'Commandant Invité';
+  const myDisplayName = currentUser ? (currentUser.displayName || currentUser.email) : guestCallsign;
   
   // Mobile active tab: 'offensive' | 'defensive'
   const [activeTab, setActiveTab] = useState('offensive');
@@ -102,6 +107,44 @@ const Game = () => {
     window.addEventListener('keydown', handleGlobalKeyDown);
     return () => window.removeEventListener('keydown', handleGlobalKeyDown);
   }, []);
+
+  // Tactical Turn Countdown Timer (45s per salvo)
+  useEffect(() => {
+    if (!gameStarted || gameOver || !isPlayerTurn) {
+      setTurnTimeLeft(45);
+      return;
+    }
+
+    const timer = setInterval(() => {
+      setTurnTimeLeft(prev => {
+        if (prev <= 1) {
+          // Time expired: auto-fire random untargeted cell to keep battle flow active
+          const untargeted = [];
+          for (let y = 0; y < 10; y++) {
+            for (let x = 0; x < 10; x++) {
+              if (!myShots.some(s => s.x === x && s.y === y)) {
+                untargeted.push({ x, y });
+              }
+            }
+          }
+          if (untargeted.length > 0) {
+            const randomCell = untargeted[Math.floor(Math.random() * untargeted.length)];
+            sound.playSonarPing();
+            handleCellClick(randomCell.x, randomCell.y);
+          }
+          return 45;
+        }
+
+        if (prev <= 6) {
+          sound.playRadarBeep();
+        }
+
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [gameStarted, gameOver, isPlayerTurn, myShots]);
 
   // Copy structured naval debrief report to clipboard
   const handleCopyDebrief = () => {
@@ -177,6 +220,7 @@ const Game = () => {
     if (!gameStarted || !isPlayerTurn || gameOver) return;
     if (myShots.some(s => s.x === x && s.y === y)) return;
 
+    setTurnTimeLeft(45);
     sound.playArtilleryLaunch();
     sound.playShellWhistle();
     const coordStr = `${LETTERS[y]}-${x + 1 < 10 ? `0${x + 1}` : x + 1}`;
@@ -313,6 +357,37 @@ const Game = () => {
     if (isWin) {
       sound.playVictory();
       addCombatLog('VICTOIRE CONFIRMÉE ! Toutes les cibles hostiles sont détruites.', 'win');
+
+      try {
+        const carrierShip = ships.find(s => s.id === 'carrier' || s.name?.toLowerCase().includes('porte-avions'));
+        const carrierHitCount = carrierShip
+          ? carrierShip.positions.filter(p => opponentShots.some(s => s.x === p.x && s.y === p.y && s.hit)).length
+          : 0;
+
+        const uid = currentUser?.uid || 'guest';
+        const curWins = parseInt(localStorage.getItem(`bc_wins_${uid}`) || '0', 10);
+        const acc = myShots.length > 0 ? Math.round((myShots.filter(s => s.hit).length / myShots.length) * 100) : 0;
+
+        const newlyUnlocked = evaluateCombatMedals({
+          userId: uid,
+          isWin: true,
+          shotsCount: myShots.length,
+          accuracy: acc,
+          carrierHitCount,
+          isSolo,
+          soloDifficulty,
+          totalWins: curWins + 1
+        });
+
+        if (newlyUnlocked && newlyUnlocked.length > 0) {
+          newlyUnlocked.forEach(m => {
+            triggerBanner(`🎖️ DÉCORATION DÉCERNÉE : ${m.title.toUpperCase()} !`, 'info');
+            addCombatLog(`Décoration militaire décernée : ${m.title} (${m.rarity})`, 'win');
+          });
+        }
+      } catch (e) {
+        console.error('Error evaluating combat medals:', e);
+      }
     } else {
       sound.playDefeat();
       addCombatLog('DÉFAITE. Tous nos bâtiments sont hors de combat.', 'loss');
@@ -357,6 +432,7 @@ const Game = () => {
     setSunkEnemyShips([]);
     setSunkAlliedShips([]);
     setTurnCount(1);
+    setTurnTimeLeft(45);
     setMessage('Nouvelle simulation ! Déployez votre flotte.');
     addCombatLog(`Nouvelle simulation solo initialisée (${soloDifficulty.toUpperCase()})`, 'info');
   };
@@ -467,7 +543,7 @@ const Game = () => {
     };
 
     // Join room
-    emit('joinRoom', { roomId, username: currentUser?.displayName || currentUser?.email || 'Capitaine' });
+    emit('joinRoom', { roomId, username: myDisplayName });
 
     const handleRoomCreated = ({ playerId: assignedPlayerId }) => {
       setPlayerId(assignedPlayerId);
@@ -510,6 +586,7 @@ const Game = () => {
       setSunkEnemyShips([]);
       setSunkAlliedShips([]);
       setTurnCount(1);
+      setTurnTimeLeft(45);
       setRematchRequestedByOpponent(false);
       setRematchSent(false);
       setRematchDeclined(false);
@@ -664,6 +741,54 @@ const Game = () => {
                 opponentShots={opponentShots}
                 turnCount={turnCount}
               />
+
+              {/* Tactical Turn Initiative & 45s Countdown Strip */}
+              {gameStarted && !gameOver && (
+                <div style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  background: isPlayerTurn ? 'rgba(100, 255, 218, 0.08)' : 'rgba(255, 71, 87, 0.08)',
+                  border: `1px solid ${isPlayerTurn ? 'var(--nav-teal)' : 'var(--nav-red)'}`,
+                  borderRadius: '4px',
+                  padding: '0.6rem 1rem',
+                  marginBottom: '1rem',
+                  flexWrap: 'wrap',
+                  gap: '0.5rem'
+                }} className="mono">
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <span className={`status-indicator ${isPlayerTurn ? 'online blink-slow' : 'offline'}`} />
+                    <span style={{ color: isPlayerTurn ? 'var(--nav-teal)' : 'var(--nav-red)', fontWeight: 'bold', fontSize: '0.82rem' }}>
+                      {isPlayerTurn ? 'ORDRE DE FEU ACCORDÉ • SALVE EN ATTENTE' : "DÉTECTION DE FRACTION HOSTILE • ATTENTE DE L'IMPACT"}
+                    </span>
+                  </div>
+
+                  {isPlayerTurn && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span style={{ fontSize: '0.72rem', color: turnTimeLeft <= 10 ? 'var(--nav-red)' : 'var(--nav-slate)' }}>
+                        CHRONO SALVE :
+                      </span>
+                      <span style={{
+                        color: turnTimeLeft <= 10 ? 'var(--nav-red)' : 'var(--nav-teal)',
+                        fontWeight: 'bold',
+                        fontSize: '0.95rem',
+                        minWidth: '32px',
+                        textAlign: 'right'
+                      }}>
+                        {turnTimeLeft}s
+                      </span>
+                      <div style={{ width: '45px', height: '5px', background: 'rgba(255,255,255,0.1)', borderRadius: '2px', overflow: 'hidden' }}>
+                        <div style={{
+                          width: `${(turnTimeLeft / 45) * 100}%`,
+                          height: '100%',
+                          background: turnTimeLeft <= 10 ? 'var(--nav-red)' : 'var(--nav-teal)',
+                          transition: 'width 1s linear'
+                        }} />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* Mobile Tab Switcher */}
               <div className="mobile-radar-tabs" style={{ marginBottom: '1rem' }}>
