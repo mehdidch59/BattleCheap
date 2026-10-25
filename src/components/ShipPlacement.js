@@ -8,20 +8,52 @@ const NUMBERS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 
 const ShipPlacement = ({ onReady }) => {
   const [grid, setGrid] = useState(Array(GRID_SIZE).fill(null).map(() => Array(GRID_SIZE).fill(null)));
-  const [currentShipIndex, setCurrentShipIndex] = useState(0);
+  const [selectedShipId, setSelectedShipId] = useState(0);
   const [orientation, setOrientation] = useState('horizontal'); // 'horizontal' | 'vertical'
   const [placedShips, setPlacedShips] = useState([]);
   const [hoverCoord, setHoverCoord] = useState(null);
 
-  const currentShip = currentShipIndex < SHIPS_CONFIG.length ? SHIPS_CONFIG[currentShipIndex] : null;
+  const currentShip = SHIPS_CONFIG.find(s => s.id === selectedShipId) || SHIPS_CONFIG[0];
+  const isCurrentShipPlaced = placedShips.some(p => p.id === currentShip.id);
 
-  // Toggle orientation
+  // Toggle orientation with mechanical ratchet audio
   const handleRotate = () => {
     sound.playRatchetClick();
     setOrientation(prev => prev === 'horizontal' ? 'vertical' : 'horizontal');
   };
 
-  // Keyboard shortcut listener for 'R' to rotate, 'Z' to undo, 'A' to auto-deploy, 'Enter' to lock in
+  // Pick up an already placed ship from the grid (or fleet card)
+  const pickupShip = (shipId) => {
+    const existing = placedShips.find(p => p.id === shipId);
+    if (!existing) {
+      setSelectedShipId(shipId);
+      sound.playBlip(680, 0.03);
+      return;
+    }
+
+    sound.playBlip(540, 0.05);
+
+    // Remove ship from grid
+    const newGrid = grid.map(row => [...row]);
+    existing.positions.forEach(pos => {
+      newGrid[pos.y][pos.x] = null;
+    });
+
+    setGrid(newGrid);
+    setPlacedShips(prev => prev.filter(p => p.id !== shipId));
+    setOrientation(existing.isHorizontal ? 'horizontal' : 'vertical');
+    setSelectedShipId(shipId);
+  };
+
+  // Select next unplaced ship automatically
+  const selectNextUnplacedShip = (currentPlacedList) => {
+    const remaining = SHIPS_CONFIG.find(s => !currentPlacedList.some(p => p.id === s.id));
+    if (remaining) {
+      setSelectedShipId(remaining.id);
+    }
+  };
+
+  // Keyboard shortcut listener for 'R' to rotate, 'Z' to undo, 'A' to auto-deploy, '1-5' to pick ship, 'Enter' to lock in
   const handleKeyDown = (e) => {
     if (e.key === 'r' || e.key === 'R') {
       e.preventDefault();
@@ -32,8 +64,29 @@ const ShipPlacement = ({ onReady }) => {
     } else if (e.key === 'a' || e.key === 'A') {
       e.preventDefault();
       handleAutoDeploy();
-    } else if (e.key === 'Enter') {
-      if (placedShips.length === SHIPS_CONFIG.length) {
+    } else if (['1', '2', '3', '4', '5'].includes(e.key)) {
+      e.preventDefault();
+      const numIdx = parseInt(e.key, 10) - 1;
+      if (SHIPS_CONFIG[numIdx]) {
+        pickupShip(SHIPS_CONFIG[numIdx].id);
+      }
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setHoverCoord(prev => ({ x: prev ? prev.x : 0, y: Math.max(0, (prev ? prev.y : 0) - 1) }));
+    } else if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setHoverCoord(prev => ({ x: prev ? prev.x : 0, y: Math.min(9, (prev ? prev.y : 0) + 1) }));
+    } else if (e.key === 'ArrowLeft') {
+      e.preventDefault();
+      setHoverCoord(prev => ({ x: Math.max(0, (prev ? prev.x : 0) - 1), y: prev ? prev.y : 0 }));
+    } else if (e.key === 'ArrowRight') {
+      e.preventDefault();
+      setHoverCoord(prev => ({ x: Math.min(9, (prev ? prev.x : 0) + 1), y: prev ? prev.y : 0 }));
+    } else if (e.key === 'Enter' || e.key === ' ') {
+      if (hoverCoord && !isCurrentShipPlaced && isValidPlacement(hoverCoord.x, hoverCoord.y)) {
+        e.preventDefault();
+        handlePlaceShip(hoverCoord.x, hoverCoord.y);
+      } else if (placedShips.length === SHIPS_CONFIG.length && isCurrentShipPlaced) {
         e.preventDefault();
         handleConfirm();
       }
@@ -53,14 +106,15 @@ const ShipPlacement = ({ onReady }) => {
 
     setGrid(newGrid);
     setPlacedShips(prev => prev.slice(0, -1));
-    setCurrentShipIndex(prev => prev - 1);
+    setSelectedShipId(lastShip.id);
+    setOrientation(lastShip.isHorizontal ? 'horizontal' : 'vertical');
   };
 
   // Reset entire fleet
   const handleReset = () => {
     sound.playBlip(350, 0.1);
     setGrid(Array(GRID_SIZE).fill(null).map(() => Array(GRID_SIZE).fill(null)));
-    setCurrentShipIndex(0);
+    setSelectedShipId(0);
     setPlacedShips([]);
   };
 
@@ -78,18 +132,18 @@ const ShipPlacement = ({ onReady }) => {
 
     setGrid(newGrid);
     setPlacedShips(randomizedFleet);
-    setCurrentShipIndex(SHIPS_CONFIG.length);
+    setSelectedShipId(SHIPS_CONFIG[0].id);
   };
 
   // Check if current hover is a valid placement
   const isValidPlacement = (x, y) => {
-    if (!currentShip) return false;
+    if (!currentShip || isCurrentShipPlaced) return false;
     return canPlaceShip(grid, x, y, currentShip.size, orientation === 'horizontal');
   };
 
   // Get coordinates covered by preview
   const getPreviewCells = () => {
-    if (!hoverCoord || !currentShip) return [];
+    if (!hoverCoord || !currentShip || isCurrentShipPlaced) return [];
     const { x, y } = hoverCoord;
     const isHorizontal = orientation === 'horizontal';
     const cells = [];
@@ -104,9 +158,18 @@ const ShipPlacement = ({ onReady }) => {
     return cells;
   };
 
-  // Place ship at coordinates
-  const handlePlaceShip = (x, y) => {
-    if (!currentShip) return;
+  // Place ship at coordinates or pickup existing ship if clicking occupied cell
+  const handleCellClick = (x, y) => {
+    const existingShipId = grid[y][x];
+
+    // If clicking an existing ship on the grid, pick it up to relocate!
+    if (existingShipId !== null && existingShipId !== undefined) {
+      pickupShip(existingShipId);
+      return;
+    }
+
+    // Otherwise, place currently selected ship
+    if (!currentShip || isCurrentShipPlaced) return;
 
     const isHorizontal = orientation === 'horizontal';
     if (!canPlaceShip(grid, x, y, currentShip.size, isHorizontal)) {
@@ -126,9 +189,12 @@ const ShipPlacement = ({ onReady }) => {
       positions.push({ x: posX, y: posY, hit: false });
     }
 
+    const updatedPlaced = [...placedShips, { ...currentShip, isHorizontal, positions }];
     setGrid(newGrid);
-    setPlacedShips(prev => [...prev, { ...currentShip, isHorizontal, positions }]);
-    setCurrentShipIndex(prev => prev + 1);
+    setPlacedShips(updatedPlaced);
+
+    // Automatically transition cursor to next unplaced ship
+    selectNextUnplacedShip(updatedPlaced);
   };
 
   const handleConfirm = () => {
@@ -156,13 +222,15 @@ const ShipPlacement = ({ onReady }) => {
           DÉPLOIEMENT DES BÂTIMENTS
         </h2>
         <p className="mono" style={{ color: 'var(--nav-slate)', fontSize: '0.85rem', margin: 0 }}>
-          {currentShip
+          {!isCurrentShipPlaced
             ? `Positionnez votre [${currentShip.name}] (${currentShip.size} cases). Appuyez sur R pour pivoter.`
-            : 'Tous les bâtiments de combat sont opérationnels. Prêt pour l\'engagement.'}
+            : placedShips.length === SHIPS_CONFIG.length
+              ? 'Tous les bâtiments sont déployés ! Cliquez sur un navire pour le déplacer ou verrouillez.'
+              : 'Sélectionnez un autre bâtiment ci-dessous pour continuer le déploiement.'}
         </p>
       </div>
 
-      {/* Fleet Overview Cards */}
+      {/* Fleet Overview Cards (Clickable to select / pick up) */}
       <div style={{
         display: 'grid',
         gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))',
@@ -171,29 +239,33 @@ const ShipPlacement = ({ onReady }) => {
       }}>
         {SHIPS_CONFIG.map((ship, idx) => {
           const isPlaced = placedShips.some(p => p.id === ship.id);
-          const isCurrent = currentShipIndex === idx;
+          const isSelected = selectedShipId === ship.id;
 
           return (
-            <div
+            <button
               key={ship.id}
+              type="button"
+              onClick={() => pickupShip(ship.id)}
+              className={`placement-ship-card ${isSelected ? 'active-selecting' : ''}`}
               style={{
-                background: isCurrent ? 'rgba(100, 255, 218, 0.15)' : 'rgba(10, 25, 47, 0.6)',
-                border: `1px solid ${isCurrent ? 'var(--nav-teal)' : isPlaced ? 'rgba(100, 255, 218, 0.4)' : 'var(--nav-lighter)'}`,
-                padding: '0.5rem',
+                background: isSelected ? 'rgba(100, 255, 218, 0.18)' : 'rgba(10, 25, 47, 0.6)',
+                border: `1px solid ${isSelected ? 'var(--nav-teal)' : isPlaced ? 'rgba(100, 255, 218, 0.4)' : 'var(--nav-lighter)'}`,
+                padding: '0.6rem 0.5rem',
                 borderRadius: '4px',
                 textAlign: 'center',
-                boxShadow: isCurrent ? '0 0 10px rgba(100, 255, 218, 0.2)' : 'none',
-                opacity: isPlaced ? 0.65 : 1
+                boxShadow: isSelected ? '0 0 12px rgba(100, 255, 218, 0.25)' : 'none',
+                opacity: isPlaced && !isSelected ? 0.75 : 1
               }}
+              title={`Touche ${idx + 1} • Cliquez pour sélectionner ou repositionner`}
             >
-              <ShipIcon type={ship.icon} size={16} color={isCurrent || isPlaced ? 'var(--nav-teal)' : 'var(--nav-slate)'} />
+              <ShipIcon type={ship.icon} size={16} color={isSelected || isPlaced ? 'var(--nav-teal)' : 'var(--nav-slate)'} />
               <div style={{ fontSize: '0.75rem', fontWeight: 'bold', color: isPlaced ? 'var(--nav-teal)' : 'var(--nav-text)', marginTop: '4px' }}>
-                {isPlaced ? `✓ ${ship.name}` : ship.name}
+                {isPlaced ? `✓ ${ship.name}` : `${idx + 1}. ${ship.name}`}
               </div>
-              <div className="mono" style={{ fontSize: '0.65rem', color: 'var(--nav-slate)' }}>
-                {ship.size} CASES
+              <div className="mono" style={{ fontSize: '0.65rem', color: isSelected ? 'var(--nav-teal)' : 'var(--nav-slate)' }}>
+                {ship.size} CASES {isSelected && !isPlaced ? '• EN MAIN' : ''}
               </div>
-            </div>
+            </button>
           );
         })}
       </div>
@@ -209,10 +281,9 @@ const ShipPlacement = ({ onReady }) => {
         <button
           className="btn btn-secondary"
           onClick={handleRotate}
-          disabled={!currentShip}
           title="Raccourci clavier: Touche R"
         >
-          PIVOTER (R): <span style={{ color: 'var(--nav-teal)', fontWeight: 'bold' }}>{orientation === 'horizontal' ? 'HORIZONTAL ➔' : 'VERTICAL ⬇'}</span>
+          PIVOTER (R): <span style={{ color: 'var(--nav-teal)', fontWeight: 'bold', marginLeft: '4px' }}>{orientation === 'horizontal' ? 'HORIZONTAL ➔' : 'VERTICAL ⬇'}</span>
         </button>
 
         <button
@@ -220,7 +291,7 @@ const ShipPlacement = ({ onReady }) => {
           onClick={handleAutoDeploy}
           style={{ borderColor: 'var(--nav-gold)', color: 'var(--nav-gold)' }}
         >
-          AUTO-DÉPLOIEMENT (RND)
+          AUTO-DÉPLOIEMENT (A)
         </button>
 
         <button
@@ -241,7 +312,7 @@ const ShipPlacement = ({ onReady }) => {
         </button>
       </div>
 
-      {/* Placement Grid with Interactive Hover Preview */}
+      {/* Placement Grid with Interactive Hover Preview & Relocate Pickups */}
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '1.5rem' }}>
         {/* Column Numbers - Mathematically aligned with cells */}
         <div
@@ -308,14 +379,15 @@ const ShipPlacement = ({ onReady }) => {
                   <button
                     key={`${x}-${y}`}
                     className={cellClass}
-                    onClick={() => handlePlaceShip(x, y)}
+                    onClick={() => handleCellClick(x, y)}
                     onMouseEnter={() => {
                       setHoverCoord({ x, y });
                       sound.playRadarBeep();
                     }}
-                    aria-label={`Case ${LETTERS[y]}-${x + 1}`}
+                    aria-label={`Case ${LETTERS[y]}-${x + 1} ${isOccupied ? 'Navire présent (cliquer pour déplacer)' : ''}`}
+                    title={isOccupied ? 'Cliquer pour déplacer ce bâtiment' : isPreview ? (placementValid ? 'Valider position' : 'Position invalide') : ''}
                     style={{
-                      cursor: currentShip ? (placementValid ? 'pointer' : 'not-allowed') : 'default'
+                      cursor: isOccupied ? 'grab' : (!isCurrentShipPlaced && placementValid ? 'pointer' : 'default')
                     }}
                   />
                 );
@@ -327,9 +399,10 @@ const ShipPlacement = ({ onReady }) => {
 
       {/* Hotkey Shortcuts Strip (Emil Kowalski & Game-UI principles) */}
       <div className="hotkeys-telemetry mono">
+        <span className="hotkey-item"><kbd>1-5</kbd> CHOISIR</span>
         <span className="hotkey-item"><kbd>R</kbd> PIVOTER</span>
         <span className="hotkey-item"><kbd>Z</kbd> ANNULER</span>
-        <span className="hotkey-item"><kbd>A</kbd> AUTO-DÉPLOIEMENT</span>
+        <span className="hotkey-item"><kbd>A</kbd> AUTO</span>
         <span className="hotkey-item"><kbd>ENTRÉE</kbd> VERROUILLER</span>
       </div>
 

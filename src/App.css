@@ -65,6 +65,32 @@ body::before {
   z-index: 0;
 }
 
+/* CRT Tactical Scanline & Phosphor Overlay (Toggleable in settings) */
+body.crt-mode::after {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: 9999;
+  background:
+    repeating-linear-gradient(
+      0deg,
+      rgba(0, 0, 0, 0.18) 0px,
+      rgba(0, 0, 0, 0.18) 1px,
+      transparent 1px,
+      transparent 3px
+    ),
+    radial-gradient(
+      circle at center,
+      transparent 65%,
+      rgba(2, 11, 24, 0.55) 100%
+    );
+  opacity: 0.95;
+}
+
 /* Typography */
 h1, h2, h3, h4, h5, h6 {
   font-weight: 600;
@@ -1376,6 +1402,136 @@ code, .mono {
 /* Emil Kowalski Button Press Haptic Feedback */
 .btn:active:not(:disabled) {
   transform: scale(0.97) !important;
+}
+
+/* ==========================================================================
+   BALLISTIC SALVO TRAJECTORY & SHOCKWAVE (Motionin.design / Game-Feel)
+   ========================================================================== */
+
+.salvo-tracer-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 25;
+}
+
+.salvo-tracer-beam {
+  stroke-dasharray: 100;
+  stroke-dashoffset: 100;
+  animation: salvoFlight 0.32s cubic-bezier(0.23, 1, 0.32, 1) forwards;
+}
+
+@keyframes salvoFlight {
+  0% {
+    stroke-dashoffset: 100;
+    opacity: 0;
+  }
+  20% {
+    opacity: 1;
+  }
+  100% {
+    stroke-dashoffset: 0;
+    opacity: 0.9;
+  }
+}
+
+.impact-shockwave {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: var(--cell-size);
+  height: var(--cell-size);
+  border-radius: 50%;
+  border: 2px solid var(--nav-red);
+  pointer-events: none;
+  animation: impactShockwave 0.45s ease-out forwards;
+}
+
+@keyframes impactShockwave {
+  0% {
+    transform: translate(-50%, -50%) scale(0.2);
+    opacity: 1;
+    border-width: 3px;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(2.6);
+    opacity: 0;
+    border-width: 1px;
+  }
+}
+
+/* Accessible Keyboard Navigation & Cell Focus (WCAG 2.1 AA) */
+.radar-cell:focus-visible {
+  outline: 2px solid var(--nav-teal);
+  outline-offset: -2px;
+  box-shadow: 0 0 12px var(--nav-teal), inset 0 0 6px var(--nav-teal);
+  z-index: 5;
+}
+
+.enemy-board .radar-cell:focus-visible {
+  outline-color: var(--nav-red);
+  box-shadow: 0 0 12px var(--nav-red), inset 0 0 6px var(--nav-red);
+}
+
+/* Bridge Telemetry & Compass Bar */
+.bridge-telemetry-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(10, 25, 47, 0.85);
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--nav-lighter);
+  border-radius: 4px;
+  padding: 0.45rem 1rem;
+  margin-bottom: 1.25rem;
+  font-size: 0.72rem;
+  color: var(--nav-slate);
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.compass-gyro {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--nav-teal);
+  font-weight: 600;
+}
+
+.compass-gyro-dial {
+  display: inline-flex;
+  animation: compassDrift 10s ease-in-out infinite alternate;
+}
+
+@keyframes compassDrift {
+  0% { transform: rotate(-4deg); }
+  100% { transform: rotate(4deg); }
+}
+
+/* Ship Placement Card Relocate Action */
+.placement-ship-card {
+  cursor: pointer;
+  transition: transform 0.15s var(--ease-out), border-color 0.15s ease, background 0.15s ease;
+  user-select: none;
+}
+
+.placement-ship-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--nav-teal) !important;
+}
+
+.placement-ship-card:active {
+  transform: scale(0.97);
+}
+
+.placement-ship-card.active-selecting {
+  background: rgba(100, 255, 218, 0.22) !important;
+  border-color: var(--nav-teal) !important;
+  box-shadow: 0 0 15px rgba(100, 255, 218, 0.35) !important;
 }
 
 

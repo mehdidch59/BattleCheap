@@ -15,6 +15,7 @@ import { SHIPS_CONFIG, TacticalAI, generateRandomFleet, findJustSunkShip } from 
 import { MedalIcon, SkullIcon, CrosshairIcon, ShieldIcon, ClipboardIcon, LinkIcon, FlagIcon, SoundWaveIcon } from '../components/TacticalIcons';
 import VictoryCelebration from '../components/VictoryCelebration';
 import { evaluateCombatMedals } from '../utils/achievements';
+import BridgeTelemetry from '../components/BridgeTelemetry';
 
 const LETTERS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'];
 
@@ -41,6 +42,10 @@ const Game = () => {
   const [opponentName, setOpponentName] = useState(isSolo ? `I.A. TACTIQUE (${soloDifficulty.toUpperCase()})` : '');
   const [copiedText, setCopiedText] = useState('');
   const [ambienceActive, setAmbienceActive] = useState(sound.ambiencePlaying);
+
+  // Ballistic Salvo Trajectory & Shockwave states
+  const [incomingSalvo, setIncomingSalvo] = useState(null);
+  const [latestShockwave, setLatestShockwave] = useState(null);
 
   // Rematch State (Multiplayer)
   const [rematchRequestedByOpponent, setRematchRequestedByOpponent] = useState(false);
@@ -217,21 +222,31 @@ const Game = () => {
 
   // Player firing on enemy grid
   const handleCellClick = (x, y) => {
-    if (!gameStarted || !isPlayerTurn || gameOver) return;
+    if (!gameStarted || !isPlayerTurn || gameOver || incomingSalvo) return;
     if (myShots.some(s => s.x === x && s.y === y)) return;
 
     setTurnTimeLeft(45);
     sound.playArtilleryLaunch();
+    sound.playMissileStreak();
     sound.playShellWhistle();
     const coordStr = `${LETTERS[y]}-${x + 1 < 10 ? `0${x + 1}` : x + 1}`;
 
-    if (isSolo) {
-      // Solo AI Execution
-      handleSoloPlayerShot(x, y, coordStr);
-    } else {
-      // Multiplayer Socket Emission
-      emit('fireShot', { x, y });
-    }
+    // Activate ballistic in-flight salvo trajectory tracer
+    setIncomingSalvo({ x, y, board: 'enemy' });
+
+    setTimeout(() => {
+      setIncomingSalvo(null);
+      setLatestShockwave({ x, y, board: 'enemy' });
+      setTimeout(() => setLatestShockwave(null), 450);
+
+      if (isSolo) {
+        // Solo AI Execution
+        handleSoloPlayerShot(x, y, coordStr);
+      } else {
+        // Multiplayer Socket Emission
+        emit('fireShot', { x, y });
+      }
+    }, 280);
   };
 
   // Solo Player Shot Logic
@@ -292,60 +307,69 @@ const Game = () => {
     const shot = aiRef.current.getNextShot(ships);
     const coordStr = `${LETTERS[shot.y]}-${shot.x + 1 < 10 ? `0${shot.x + 1}` : shot.x + 1}`;
 
-    const hitShip = ships.find(ship =>
-      ship.positions.some(p => p.x === shot.x && p.y === shot.y)
-    );
-    const hit = !!hitShip;
+    sound.playShellWhistle();
+    setIncomingSalvo({ x: shot.x, y: shot.y, board: 'player' });
 
-    setOpponentShots(prev => {
-      const updated = [...prev, { x: shot.x, y: shot.y, hit }];
-      
-      if (hit) {
-        sound.playExplosion();
-        addTrauma(0.6);
+    setTimeout(() => {
+      setIncomingSalvo(null);
+      setLatestShockwave({ x: shot.x, y: shot.y, board: 'player' });
+      setTimeout(() => setLatestShockwave(null), 450);
 
-        // Check if allied ship is sunk
-        const justSunk = findJustSunkShip(ships, updated, { x: shot.x, y: shot.y, hit: true });
-        aiRef.current.recordShotResult(shot.x, shot.y, true, justSunk);
+      const hitShip = ships.find(ship =>
+        ship.positions.some(p => p.x === shot.x && p.y === shot.y)
+      );
+      const hit = !!hitShip;
 
-        if (justSunk) {
-          sound.playShipSunk();
-          addTrauma(1.0);
-          setSunkAlliedShips(prevSunk => [...prevSunk, justSunk]);
-          triggerBanner(`ALERTE CRITIQUE : NOTRE ${justSunk.name.toUpperCase()} A ÉTÉ COULÉ !`, 'danger');
-          addCombatLog(`L'adversaire a fait feu en [${coordStr}] : NOTRE ${justSunk.name} A ÉTÉ COULÉ !`, 'sink');
+      setOpponentShots(prev => {
+        const updated = [...prev, { x: shot.x, y: shot.y, hit }];
+        
+        if (hit) {
+          sound.playExplosion();
+          addTrauma(0.6);
+
+          // Check if allied ship is sunk
+          const justSunk = findJustSunkShip(ships, updated, { x: shot.x, y: shot.y, hit: true });
+          aiRef.current.recordShotResult(shot.x, shot.y, true, justSunk);
+
+          if (justSunk) {
+            sound.playShipSunk();
+            addTrauma(1.0);
+            setSunkAlliedShips(prevSunk => [...prevSunk, justSunk]);
+            triggerBanner(`ALERTE CRITIQUE : NOTRE ${justSunk.name.toUpperCase()} A ÉTÉ COULÉ !`, 'danger');
+            addCombatLog(`L'adversaire a fait feu en [${coordStr}] : NOTRE ${justSunk.name} A ÉTÉ COULÉ !`, 'sink');
+          } else {
+            addCombatLog(`L'adversaire a fait feu en [${coordStr}] : IMPACT sur notre flotte !`, 'hit');
+            setMessage('ALERTE ! Un de nos navires a été touché !');
+          }
+
+          // Check if player lost
+          const allPlayerSunk = ships.every(ship =>
+            ship.positions.every(p => updated.some(s => s.x === p.x && s.y === p.y && s.hit))
+          );
+
+          if (allPlayerSunk) {
+            handleGameOver(false);
+            return updated;
+          }
+
+          // AI hits again if successful
+          setTimeout(() => {
+            executeAiTurn();
+          }, 900);
         } else {
-          addCombatLog(`L'adversaire a fait feu en [${coordStr}] : IMPACT sur notre flotte !`, 'hit');
-          setMessage('ALERTE ! Un de nos navires a été touché !');
+          sound.playSplash();
+          aiRef.current.recordShotResult(shot.x, shot.y, false);
+          addCombatLog(`L'adversaire a tiré en [${coordStr}] : Tir manqué dans l'eau.`, 'info');
+          setMessage('Tir ennemi manqué ! C\'est à vous d\'ordonner la riposte.');
+          setIsPlayerTurn(true);
+          setActiveTab('offensive');
+          sound.playTacticalLock();
+          setTurnCount(t => t + 1);
         }
 
-        // Check if player lost
-        const allPlayerSunk = ships.every(ship =>
-          ship.positions.every(p => updated.some(s => s.x === p.x && s.y === p.y && s.hit))
-        );
-
-        if (allPlayerSunk) {
-          handleGameOver(false);
-          return updated;
-        }
-
-        // AI hits again if successful
-        setTimeout(() => {
-          executeAiTurn();
-        }, 900);
-      } else {
-        sound.playSplash();
-        aiRef.current.recordShotResult(shot.x, shot.y, false);
-        addCombatLog(`L'adversaire a tiré en [${coordStr}] : Tir manqué dans l'eau.`, 'info');
-        setMessage('Tir ennemi manqué ! C\'est à vous d\'ordonner la riposte.');
-        setIsPlayerTurn(true);
-        setActiveTab('offensive');
-        sound.playTacticalLock();
-        setTurnCount(t => t + 1);
-      }
-
-      return updated;
-    });
+        return updated;
+      });
+    }, 280);
   };
 
   // Game Over Handler
@@ -733,6 +757,9 @@ const Game = () => {
             <ShipPlacement onReady={handleReady} />
           ) : (
             <div>
+              {/* Naval Command Bridge Telemetry Bar (Motionsites & Getdesign.md inspiration) */}
+              <BridgeTelemetry />
+
               {/* Telemetry HUD */}
               <FleetStatusHUD
                 playerShips={ships}
@@ -822,6 +849,8 @@ const Game = () => {
                     isGameStarted={gameStarted}
                     isPlayerTurn={isPlayerTurn}
                     sunkShips={sunkEnemyShips}
+                    incomingSalvo={incomingSalvo?.board === 'enemy' ? incomingSalvo : null}
+                    latestShockwave={latestShockwave?.board === 'enemy' ? latestShockwave : null}
                   />
                 </div>
 
@@ -835,6 +864,8 @@ const Game = () => {
                     isGameStarted={gameStarted}
                     isPlayerTurn={isPlayerTurn}
                     sunkShips={sunkAlliedShips}
+                    incomingSalvo={incomingSalvo?.board === 'player' ? incomingSalvo : null}
+                    latestShockwave={latestShockwave?.board === 'player' ? latestShockwave : null}
                   />
                 </div>
               </div>

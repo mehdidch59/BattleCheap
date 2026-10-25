@@ -12,7 +12,9 @@ const Board = ({
   isPlayerBoard,
   isGameStarted,
   isPlayerTurn,
-  sunkShips = []
+  sunkShips = [],
+  incomingSalvo = null,
+  latestShockwave = null
 }) => {
   const [hoverCoord, setHoverCoord] = useState(null);
   const camo = getActiveCamouflage();
@@ -61,6 +63,16 @@ const Board = ({
     }
   };
 
+  const focusCell = (cx, cy) => {
+    setHoverCoord({ x: cx, y: cy });
+    sound.playBlip(760, 0.02);
+    const prefix = isPlayerBoard ? 'def' : 'off';
+    const targetEl = document.getElementById(`cell-${prefix}-${cx}-${cy}`);
+    if (targetEl) {
+      targetEl.focus();
+    }
+  };
+
   const handleClick = (x, y) => {
     if (!isPlayerBoard && isGameStarted && isPlayerTurn) {
       // Don't fire on already shot cells
@@ -71,7 +83,23 @@ const Board = ({
   };
 
   const handleKeyDown = (e, x, y) => {
-    if (e.key === 'Enter' || e.key === ' ') {
+    if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      const nextY = Math.max(0, y - 1);
+      focusCell(x, nextY);
+    } else if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      const nextY = Math.min(9, y + 1);
+      focusCell(x, nextY);
+    } else if (e.key === 'ArrowLeft') {
+      e.preventDefault();
+      const nextX = Math.max(0, x - 1);
+      focusCell(nextX, y);
+    } else if (e.key === 'ArrowRight') {
+      e.preventDefault();
+      const nextX = Math.min(9, x + 1);
+      focusCell(nextX, y);
+    } else if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault();
       handleClick(x, y);
     }
@@ -204,6 +232,30 @@ const Board = ({
             }}
             onMouseLeave={() => setHoverCoord(null)}
           >
+            {/* Salvo Ballistic Tracer Beam In-Flight Overlay */}
+            {incomingSalvo && (
+              <svg
+                className="salvo-tracer-overlay"
+                viewBox="0 0 100 100"
+                preserveAspectRatio="none"
+                aria-hidden="true"
+              >
+                <line
+                  x1="50"
+                  y1="100"
+                  x2={(incomingSalvo.x + 0.5) * 10}
+                  y2={(incomingSalvo.y + 0.5) * 10}
+                  stroke={isPlayerBoard ? 'var(--nav-red)' : 'var(--nav-teal)'}
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  className="salvo-tracer-beam"
+                  style={{
+                    filter: `drop-shadow(0 0 6px ${isPlayerBoard ? 'var(--nav-red)' : 'var(--nav-teal)'})`
+                  }}
+                />
+              </svg>
+            )}
+
             {grid.map((row, y) =>
               row.map((cell, x) => {
                 const sunk = isCellSunk(x, y);
@@ -227,15 +279,20 @@ const Board = ({
                 return (
                   <button
                     key={`${x}-${y}`}
+                    id={`cell-${isPlayerBoard ? 'def' : 'off'}-${x}-${y}`}
                     className={cellClass}
                     style={shipCamoStyle}
                     onClick={() => handleClick(x, y)}
                     onMouseEnter={() => handleMouseEnter(x, y)}
+                    onFocus={() => handleMouseEnter(x, y)}
                     onKeyDown={(e) => handleKeyDown(e, x, y)}
                     aria-label={`Secteur ${LETTERS[y]}-${x + 1} ${cell?.hit ? 'Touché' : cell?.miss ? 'Manqué' : ''}`}
                     disabled={!isTargetable && !isPlayerBoard}
                     tabIndex={isTargetable ? 0 : -1}
                   >
+                    {latestShockwave?.x === x && latestShockwave?.y === y && (
+                      <span className="impact-shockwave" aria-hidden="true" />
+                    )}
                     {isTargetable && hoverCoord?.x === x && hoverCoord?.y === y && (
                       <div className="targeting-reticle" aria-hidden="true">
                         <span className="reticle-corner tl" />

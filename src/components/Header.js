@@ -20,6 +20,7 @@ const Header = () => {
   const [showManual, setShowManual] = useState(false);
   const [masterVol, setMasterVol] = useState(sound.masterVolume);
   const [shakeDisabled, setShakeDisabled] = useState(localStorage.getItem('bc_disable_shake') === 'true');
+  const [crtEnabled, setCrtEnabled] = useState(localStorage.getItem('bc_crt_mode') === 'true');
   const [ambiencePlaying, setAmbiencePlaying] = useState(sound.ambiencePlaying);
   const [currentCamo, setCurrentCamo] = useState(getActiveCamouflage());
 
@@ -86,6 +87,21 @@ const Header = () => {
     const newVal = !shakeDisabled;
     setShakeDisabled(newVal);
     localStorage.setItem('bc_disable_shake', newVal.toString());
+  };
+
+  useEffect(() => {
+    if (crtEnabled) {
+      document.body.classList.add('crt-mode');
+    } else {
+      document.body.classList.remove('crt-mode');
+    }
+  }, [crtEnabled]);
+
+  const handleToggleCrt = () => {
+    sound.playBlip(750, 0.04);
+    const nextVal = !crtEnabled;
+    setCrtEnabled(nextVal);
+    localStorage.setItem('bc_crt_mode', nextVal.toString());
   };
 
   return (
@@ -248,7 +264,17 @@ const Header = () => {
                   </div>
                 </div>
 
-                <div style={{ borderTop: '1px solid var(--nav-lighter)', paddingTop: '0.75rem' }}>
+                <div style={{ borderTop: '1px solid var(--nav-lighter)', paddingTop: '0.75rem', display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '0.75rem', color: 'var(--nav-text)' }}>
+                    <input
+                      type="checkbox"
+                      checked={crtEnabled}
+                      onChange={handleToggleCrt}
+                      style={{ accentColor: 'var(--nav-teal)' }}
+                    />
+                    <span>Filtre CRT / Scanlines phosphoriques</span>
+                  </label>
+
                   <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '0.75rem', color: 'var(--nav-text)' }}>
                     <input
                       type="checkbox"
