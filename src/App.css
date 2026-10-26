@@ -1166,10 +1166,10 @@ code, .mono {
 }
 
 .unauth-bento-container {
-  padding: 1.75rem 2rem;
+  padding: 2rem;
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
+  gap: 1.5rem;
   width: 100%;
 }
 
@@ -1180,6 +1180,8 @@ code, .mono {
   flex-wrap: wrap;
   gap: 1.25rem;
   width: 100%;
+  max-width: 960px;
+  margin: 0 auto;
 }
 
 .unauth-bento-identity {
@@ -1201,44 +1203,41 @@ code, .mono {
   height: 1px;
   background: var(--nav-lighter);
   width: 100%;
-  margin: 0.25rem 0;
+  max-width: 960px;
+  margin: 0 auto;
 }
 
-/* Medal Rack & Decorations Grid Styling */
+/* Medal Rack & Decorations Grid Styling - Centered 3 on Top / 3 on Bottom */
 .medal-rack-container {
   width: 100%;
+  max-width: 960px;
+  margin: 0 auto;
 }
 
 .medal-rack-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding-bottom: 0.5rem;
-  margin-bottom: 0.85rem;
+  padding-bottom: 0.6rem;
+  margin-bottom: 1rem;
   border-bottom: 1px solid var(--nav-lighter);
   width: 100%;
 }
 
 .medal-rack-grid {
   display: grid;
-  grid-template-columns: repeat(6, 1fr);
-  gap: 0.75rem;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
   width: 100%;
 }
 
-@media (max-width: 1100px) {
-  .medal-rack-grid {
-    grid-template-columns: repeat(3, 1fr);
-  }
-}
-
-@media (max-width: 640px) {
+@media (max-width: 768px) {
   .medal-rack-grid {
     grid-template-columns: repeat(2, 1fr);
   }
 }
 
-@media (max-width: 440px) {
+@media (max-width: 480px) {
   .medal-rack-grid {
     grid-template-columns: 1fr;
   }
@@ -1248,11 +1247,11 @@ code, .mono {
   background: rgba(2, 12, 27, 0.45);
   border: 1px solid rgba(136, 146, 176, 0.16);
   border-radius: 6px;
-  padding: 0.75rem;
+  padding: 0.85rem 1rem;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  min-height: 120px;
+  min-height: 115px;
   transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s ease, box-shadow 0.2s ease;
 }
 

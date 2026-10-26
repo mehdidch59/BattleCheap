@@ -55,7 +55,7 @@ const MedalRack = ({ userId = 'guest' }) => {
         </span>
       </div>
 
-      {/* Responsive 6-Col Grid with Balanced Full-Width Layout */}
+      {/* Centered 3-Top / 3-Bottom Grid */}
       <div className="medal-rack-grid">
         {MEDALS.map(medal => {
           const isUnlocked = !!unlocked[medal.id];
@@ -76,11 +76,11 @@ const MedalRack = ({ userId = 'guest' }) => {
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center',
-                marginBottom: '8px'
+                marginBottom: '10px'
               }}>
                 <div style={{
-                  width: '32px',
-                  height: '32px',
+                  width: '34px',
+                  height: '34px',
                   borderRadius: '6px',
                   display: 'flex',
                   alignItems: 'center',
@@ -89,16 +89,16 @@ const MedalRack = ({ userId = 'guest' }) => {
                   border: `1px solid ${isUnlocked ? `${medal.color}35` : 'rgba(255, 255, 255, 0.06)'}`,
                   flexShrink: 0
                 }}>
-                  {renderMedalIcon(medal.id, iconColor, 17)}
+                  {renderMedalIcon(medal.id, iconColor, 19)}
                 </div>
 
                 <span style={{
-                  fontSize: '0.6rem',
-                  letterSpacing: '0.5px',
+                  fontSize: '0.62rem',
+                  letterSpacing: '0.6px',
                   color: isUnlocked ? medal.color : 'var(--nav-slate)',
                   background: isUnlocked ? `${medal.color}18` : 'rgba(255, 255, 255, 0.02)',
                   border: `1px solid ${isUnlocked ? `${medal.color}40` : 'rgba(136, 146, 176, 0.2)'}`,
-                  padding: '2px 5px',
+                  padding: '2px 7px',
                   borderRadius: '3px',
                   fontWeight: 'bold',
                   whiteSpace: 'nowrap'
@@ -112,16 +112,16 @@ const MedalRack = ({ userId = 'guest' }) => {
                 <div style={{
                   color: isUnlocked ? 'var(--nav-text)' : 'var(--nav-slate)',
                   fontWeight: 'bold',
-                  fontSize: '0.76rem',
-                  lineHeight: 1.25,
-                  marginBottom: '3px'
+                  fontSize: '0.82rem',
+                  lineHeight: 1.3,
+                  marginBottom: '4px'
                 }}>
                   {medal.title}
                 </div>
                 <div style={{
                   color: 'var(--nav-slate)',
-                  fontSize: '0.64rem',
-                  lineHeight: 1.35
+                  fontSize: '0.68rem',
+                  lineHeight: 1.4
                 }}>
                   {medal.desc}
                 </div>
