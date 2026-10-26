@@ -1165,13 +1165,109 @@ code, .mono {
   background: rgba(255, 71, 87, 0.05);
 }
 
-.unauth-bento-prompt {
-  padding: 2rem;
+.unauth-bento-container {
+  padding: 1.75rem 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  width: 100%;
+}
+
+.unauth-bento-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   flex-wrap: wrap;
-  gap: 1.5rem;
+  gap: 1.25rem;
+  width: 100%;
+}
+
+.unauth-bento-identity {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex: 1;
+  min-width: 280px;
+}
+
+.unauth-bento-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-shrink: 0;
+}
+
+.unauth-bento-divider {
+  height: 1px;
+  background: var(--nav-lighter);
+  width: 100%;
+  margin: 0.25rem 0;
+}
+
+/* Medal Rack & Decorations Grid Styling */
+.medal-rack-container {
+  width: 100%;
+}
+
+.medal-rack-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 0.5rem;
+  margin-bottom: 0.85rem;
+  border-bottom: 1px solid var(--nav-lighter);
+  width: 100%;
+}
+
+.medal-rack-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 0.75rem;
+  width: 100%;
+}
+
+@media (max-width: 1100px) {
+  .medal-rack-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .medal-rack-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 440px) {
+  .medal-rack-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.medal-cell {
+  background: rgba(2, 12, 27, 0.45);
+  border: 1px solid rgba(136, 146, 176, 0.16);
+  border-radius: 6px;
+  padding: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 120px;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.medal-cell:hover {
+  transform: translateY(-2px);
+  border-color: rgba(100, 255, 218, 0.35);
+}
+
+.medal-cell.unlocked {
+  background: rgba(2, 12, 27, 0.75);
+  opacity: 1;
+}
+
+.medal-cell.locked {
+  opacity: 0.65;
 }
 
 /* Features Strip at Bottom */

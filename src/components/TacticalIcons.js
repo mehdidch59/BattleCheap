@@ -189,3 +189,18 @@ export const SwordsIcon = ({ size = 16, color = 'currentColor', className = '' }
     <line x1="2" y1="19" x2="4" y2="21" />
   </svg>
 );
+
+export const ZapIcon = ({ size = 18, color = 'currentColor', className = '' }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" fill={color} fillOpacity="0.2" />
+  </svg>
+);
+
+export const AnchorIcon = ({ size = 18, color = 'currentColor', className = '' }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <circle cx="12" cy="5" r="3" />
+    <line x1="12" y1="8" x2="12" y2="21" />
+    <path d="M5 12H2a10 10 0 0 0 20 0h-3" />
+    <path d="M8 12h8" />
+  </svg>
+);

@@ -554,39 +554,43 @@ const Home = () => {
                 )}
               </div>
             ) : (
-              <div className="unauth-bento-prompt">
-                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                  <div className="mode-icon-box teal">
-                    <ShieldIcon size={24} color="var(--nav-teal)" />
+              <div className="unauth-bento-container">
+                <div className="unauth-bento-header">
+                  <div className="unauth-bento-identity">
+                    <div className="mode-icon-box teal">
+                      <ShieldIcon size={24} color="var(--nav-teal)" />
+                    </div>
+                    <div>
+                      <div className="mono" style={{ color: 'var(--nav-teal)', fontSize: '0.8rem', letterSpacing: '1px', fontWeight: 'bold' }}>
+                        REGISTRE DU COMMANDANT VERROUILLÉ
+                      </div>
+                      <div style={{ fontSize: '0.86rem', color: 'var(--nav-slate)', marginTop: '3px' }}>
+                        Connectez votre matricule pour enregistrer vos états de service, médailles de guerre et télémétrie de victoires.
+                      </div>
+                    </div>
                   </div>
-                  <div>
-                    <div className="mono" style={{ color: 'var(--nav-teal)', fontSize: '0.78rem', letterSpacing: '1px' }}>
-                      REGISTRE DU COMMANDANT VERROUILLÉ
-                    </div>
-                    <div style={{ fontSize: '0.88rem', color: 'var(--nav-slate)', marginTop: '2px' }}>
-                      Connectez votre matricule pour enregistrer vos états de service, médailles de guerre et télémétrie de victoires.
-                    </div>
+
+                  <div className="unauth-bento-actions">
+                    <Link
+                      to="/login"
+                      className="btn btn-primary"
+                      onClick={() => sound.playBlip()}
+                      style={{ padding: '0.65rem 1.4rem', fontSize: '0.8rem' }}
+                    >
+                      CONNEXION
+                    </Link>
+                    <Link
+                      to="/register"
+                      className="btn btn-secondary"
+                      onClick={() => sound.playBlip()}
+                      style={{ padding: '0.65rem 1.4rem', fontSize: '0.8rem' }}
+                    >
+                      ENRÔLEMENT
+                    </Link>
                   </div>
                 </div>
 
-                <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1rem', marginBottom: '1.25rem' }}>
-                  <Link
-                    to="/login"
-                    className="btn btn-primary"
-                    onClick={() => sound.playBlip()}
-                    style={{ padding: '0.65rem 1.4rem', fontSize: '0.8rem' }}
-                  >
-                    CONNEXION
-                  </Link>
-                  <Link
-                    to="/register"
-                    className="btn btn-secondary"
-                    onClick={() => sound.playBlip()}
-                    style={{ padding: '0.65rem 1.4rem', fontSize: '0.8rem' }}
-                  >
-                    ENRÔLEMENT
-                  </Link>
-                </div>
+                <div className="unauth-bento-divider" />
 
                 {/* Guest Campaign Medals Showcase */}
                 <MedalRack userId="guest" />
