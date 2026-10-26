@@ -66,15 +66,13 @@ const BridgeTelemetry = ({ className = '' }) => {
         <span style={{ color: 'var(--nav-text)' }}>43°07′N • 005°55′E (TOULON QG)</span>
       </div>
 
-      {/* Military Transponder Squawk & Condition */}
+      {/* Sector & Telemetry Connection */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-        <span style={{ color: 'var(--nav-slate)' }}>SQUAWK :</span>
-        <span style={{ color: 'var(--nav-gold)', fontWeight: 'bold' }}>7700-MIL</span>
-        <span style={{ opacity: 0.3 }}>|</span>
-        <span style={{ color: 'var(--nav-teal)', fontWeight: 'bold' }}>DEFCON 1</span>
-        <span style={{ opacity: 0.3 }}>|</span>
-        <span className="mono" style={{ color: 'var(--nav-teal)', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-          <span className="status-indicator online blink-slow" style={{ width: '5px', height: '5px' }} />
+        <span style={{ color: 'var(--nav-slate)' }}>LIAISON :</span>
+        <span style={{ color: 'var(--nav-teal)', fontWeight: 'bold' }}>RADAR CHIFFRÉ</span>
+        <span style={{ opacity: 0.3 }}>•</span>
+        <span className="mono" style={{ color: 'var(--nav-teal)', display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
+          <span className="status-indicator online blink-slow" style={{ width: '6px', height: '6px' }} />
           RTT {ping}ms
         </span>
       </div>

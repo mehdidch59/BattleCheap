@@ -4,6 +4,7 @@ import { RANKS } from '../utils/ranks';
 import { ShipIcon } from './ShipGraphic';
 import RankInsignia from './RankInsignia';
 import { sound } from '../utils/audio';
+import { CloseIcon } from './TacticalIcons';
 
 /**
  * TacticalManualModal
@@ -63,9 +64,9 @@ const TacticalManualModal = ({ onClose }) => {
           <button
             onClick={() => { sound.playBlip(); onClose(); }}
             className="btn btn-secondary mono"
-            style={{ padding: '0.35rem 0.8rem', fontSize: '0.8rem' }}
+            style={{ padding: '0.35rem 0.8rem', fontSize: '0.8rem', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
           >
-            ✕ FERMER
+            <CloseIcon size={14} /> FERMER
           </button>
         </div>
 

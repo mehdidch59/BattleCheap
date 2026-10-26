@@ -62,9 +62,9 @@ const Register = () => {
         <TiltCard accent="teal" className="bento-card auth-bento-card" style={{ width: '100%', maxWidth: '500px' }}>
           <div style={{ padding: '2.25rem' }}>
             {/* Header Telemetry */}
-            <div className="auth-telemetry-strip mono">
+            <div className="auth-telemetry-strip">
               <span className="status-indicator online blink-slow" style={{ width: '6px', height: '6px' }} />
-              <span>REG_CADRE: INITIALISATION MATRICULE NAVAL</span>
+              <span>Création de profil d'officier de marine</span>
             </div>
 
             <div style={{ textAlign: 'center', marginBottom: '1.75rem' }}>

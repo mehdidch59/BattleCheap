@@ -12,7 +12,7 @@ import { db } from '../firebase/config';
 import { doc, updateDoc, arrayUnion } from 'firebase/firestore';
 import { sound } from '../utils/audio';
 import { SHIPS_CONFIG, TacticalAI, generateRandomFleet, findJustSunkShip } from '../utils/gameAI';
-import { MedalIcon, SkullIcon, CrosshairIcon, ShieldIcon, ClipboardIcon, LinkIcon, FlagIcon, SoundWaveIcon } from '../components/TacticalIcons';
+import { MedalIcon, SkullIcon, CrosshairIcon, ShieldIcon, ClipboardIcon, LinkIcon, FlagIcon, SoundWaveIcon, CheckIcon, SwordsIcon } from '../components/TacticalIcons';
 import VictoryCelebration from '../components/VictoryCelebration';
 import { evaluateCombatMedals } from '../utils/achievements';
 import BridgeTelemetry from '../components/BridgeTelemetry';
@@ -405,7 +405,7 @@ const Game = () => {
 
         if (newlyUnlocked && newlyUnlocked.length > 0) {
           newlyUnlocked.forEach(m => {
-            triggerBanner(`🎖️ DÉCORATION DÉCERNÉE : ${m.title.toUpperCase()} !`, 'info');
+            triggerBanner(`DÉCORATION DÉCERNÉE : ${m.title.toUpperCase()} !`, 'info');
             addCombatLog(`Décoration militaire décernée : ${m.title} (${m.rarity})`, 'win');
           });
         }
@@ -880,8 +880,9 @@ const Game = () => {
                 flexWrap: 'wrap',
                 gap: '1rem'
               }}>
-                <div className="mono" style={{ color: isPlayerTurn ? 'var(--nav-teal)' : 'var(--nav-gold)', fontWeight: 'bold' }}>
-                  {isPlayerTurn ? '⚡ STATUT : PRÊT AU TIR - SÉLECTIONNEZ UNE COORDONNÉE' : '⏳ STATUT : EN ATTENTE DU TIR HOSTILE...'}
+                <div className="mono" style={{ color: isPlayerTurn ? 'var(--nav-teal)' : 'var(--nav-gold)', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span className={`status-indicator ${isPlayerTurn ? 'online blink-slow' : 'warning blink-slow'}`} style={{ width: '7px', height: '7px' }} />
+                  <span>{isPlayerTurn ? 'STATUT : PRÊT AU TIR — SÉLECTIONNEZ UNE COORDONNÉE' : 'STATUT : EN ATTENTE DU TIR HOSTILE...'}</span>
                 </div>
 
                 <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
@@ -965,10 +966,23 @@ const Game = () => {
 
                       <div className="mono" style={{ fontSize: '0.72rem', background: 'rgba(255,204,0,0.06)', border: '1px solid rgba(255,204,0,0.18)', borderRadius: '4px', padding: '0.5rem 0.75rem' }}>
                         <div style={{ color: 'var(--nav-slate)', fontSize: '0.62rem', marginBottom: '2px' }}>ÉTAT DU CALCULATEUR BALISTIQUE :</div>
-                        <div style={{ color: opponentShots.some(s => s.hit && !sunkAlliedShips.some(sh => sh.positions.some(p => p.x === s.x && p.y === s.y))) ? 'var(--nav-red)' : 'var(--nav-gold)' }}>
-                          {opponentShots.some(s => s.hit && !sunkAlliedShips.some(sh => sh.positions.some(p => p.x === s.x && p.y === s.y)))
-                            ? '🎯 CIBLE VERROUILLÉE — ALGORITHME EN PHASE D\'EXÉCUTION'
-                            : '📡 RECHERCHE RADAR ACTIVE — PARITÉ OPTIMISÉE'}
+                        <div style={{
+                          color: opponentShots.some(s => s.hit && !sunkAlliedShips.some(sh => sh.positions.some(p => p.x === s.x && p.y === s.y))) ? 'var(--nav-red)' : 'var(--nav-gold)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '6px'
+                        }}>
+                          {opponentShots.some(s => s.hit && !sunkAlliedShips.some(sh => sh.positions.some(p => p.x === s.x && p.y === s.y))) ? (
+                            <>
+                              <CrosshairIcon size={12} color="var(--nav-red)" />
+                              <span>CIBLE VERROUILLÉE — ALGORITHME EN PHASE D'EXÉCUTION</span>
+                            </>
+                          ) : (
+                            <>
+                              <span className="status-indicator warning blink-slow" style={{ width: '5px', height: '5px' }} />
+                              <span>RECHERCHE RADAR ACTIVE — PARITÉ OPTIMISÉE</span>
+                            </>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -1083,8 +1097,8 @@ const Game = () => {
                   color: debriefCopied ? 'var(--nav-teal)' : 'var(--nav-text)'
                 }}
               >
-                <ClipboardIcon size={15} color="currentColor" />
-                <span>{debriefCopied ? '✓ RAPPORT COPIÉ DANS LE PRESSE-PAPIER !' : 'COPIER LE RAPPORT DE MISSION (PARTAGE)'}</span>
+                {debriefCopied ? <CheckIcon size={15} color="currentColor" /> : <ClipboardIcon size={15} color="currentColor" />}
+                <span>{debriefCopied ? 'RAPPORT COPIÉ DANS LE PRESSE-PAPIER !' : 'COPIER LE RAPPORT DE MISSION (PARTAGE)'}</span>
               </button>
 
               {/* Unauthenticated Guest Commander Prompt */}
@@ -1126,8 +1140,9 @@ const Game = () => {
                       padding: '0.85rem',
                       textAlign: 'center'
                     }}>
-                      <div className="mono" style={{ color: 'var(--nav-teal)', fontWeight: 'bold', fontSize: '0.82rem', marginBottom: '0.6rem' }}>
-                        ⚔️ L'OFFICIER ADVERSE DEMANDE UNE REVANCHE IMMÉDIATE !
+                      <div className="mono" style={{ color: 'var(--nav-teal)', fontWeight: 'bold', fontSize: '0.82rem', marginBottom: '0.6rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                        <SwordsIcon size={15} color="var(--nav-teal)" />
+                        <span>L'OFFICIER ADVERSE DEMANDE UNE REVANCHE IMMÉDIATE !</span>
                       </div>
                       <div style={{ display: 'flex', gap: '0.6rem', justifyContent: 'center' }}>
                         <button
@@ -1216,9 +1231,10 @@ const Game = () => {
                         emit('requestRematch');
                         addCombatLog('Demande de revanche transmise à l\'adversaire...', 'info');
                       }}
-                      style={{ flex: 1, minWidth: '140px' }}
+                      style={{ flex: 1, minWidth: '140px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
                     >
-                      ⚔️ DEMANDER REVANCHE
+                      <SwordsIcon size={15} color="currentColor" />
+                      <span>DEMANDER REVANCHE</span>
                     </button>
                   )
                 )}

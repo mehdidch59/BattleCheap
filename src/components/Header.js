@@ -9,7 +9,7 @@ import { CAMOUFLAGES, getActiveCamouflage, setActiveCamouflage } from '../utils/
 import RankInsignia from './RankInsignia';
 import TacticalManualModal from './TacticalManualModal';
 import LiquidLogo from './LiquidLogo';
-import { SoundOnIcon, SoundMuteIcon } from './TacticalIcons';
+import { SoundOnIcon, SoundMuteIcon, BookManualIcon, UserBadgeIcon, EditIcon } from './TacticalIcons';
 
 const Header = () => {
   const { currentUser, logout } = useAuth();
@@ -127,10 +127,10 @@ const Header = () => {
               setShowManual(true);
             }}
             className="btn btn-secondary mono"
-            style={{ padding: '0.4rem 0.75rem', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '5px' }}
+            style={{ padding: '0.4rem 0.75rem', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '6px' }}
             title="Consulter le manuel de commandement et règles d'engagement"
           >
-            <span>📜</span>
+            <BookManualIcon size={14} color="currentColor" />
             <span>MANUEL</span>
           </button>
 
@@ -353,9 +353,9 @@ const Header = () => {
                 }}
                 title="Cliquer pour modifier votre indicatif d'officier"
               >
-                <span>🪪</span>
+                <UserBadgeIcon size={14} color="var(--nav-gold)" />
                 <span>{guestCallsign}</span>
-                <span style={{ opacity: 0.6, fontSize: '0.65rem' }}>✎</span>
+                <EditIcon size={11} color="var(--nav-gold)" style={{ opacity: 0.7 }} />
               </button>
               <Link
                 to="/login"

@@ -19,7 +19,8 @@ import {
   SkullIcon,
   CrosshairIcon,
   SoundWaveIcon,
-  ShieldIcon
+  ShieldIcon,
+  DiceIcon
 } from '../components/TacticalIcons';
 
 // Circular SVG Win-Rate Dial Gauge (Inspired by modern SaaS dashboards)
@@ -197,32 +198,19 @@ const Home = () => {
       <Header />
 
       <main className="container" style={{ marginTop: '2.5rem', paddingBottom: '4.5rem' }}>
-        {/* Kinetic Hero Banner with Shimmer & Telemetry Strip */}
+        {/* Confident, Refined Hero Banner */}
         <section className="home-hero">
-          <div className="hero-telemetry-strip mono">
-            <span className="telemetry-item">
-              <span className="status-indicator online blink-slow" style={{ width: '7px', height: '7px' }} />
-              SEC_NET: 04-NORAD
-            </span>
-            <span className="telemetry-separator">/</span>
-            <span className="telemetry-item">RADAR: SYNCHRONISÉ</span>
-            <span className="telemetry-separator">/</span>
-            <span className="telemetry-item" style={{ color: 'var(--nav-teal)', fontWeight: 'bold' }}>
-              DEFCON 1 ACTIF
-            </span>
+          <div className="hero-status-pill">
+            <span className="status-indicator online blink-slow" style={{ width: '6px', height: '6px' }} />
+            <span>Poste de commandement naval tactique</span>
           </div>
 
           <h1 className="hero-title">
             BATTLECHEAP
           </h1>
 
-          <div className="hero-radar-badge mono">
-            <RadarIcon size={16} color="var(--nav-teal)" />
-            <span>CENTRE DE COMMANDEMENT NAVAL STRATÉGIQUE</span>
-          </div>
-
-          <p className="hero-description mono">
-            Plateforme tactique de guerre navale en haute mer. Engagez des cibles ennemies en simulation solo face à l'I.A. ou défiez d'autres commandants en réseau sécurisé.
+          <p className="hero-description">
+            Bataille navale en temps réel. Engagez votre escadre en simulation face à une intelligence artificielle tactique ou affrontez d'autres commandants en réseau.
           </p>
         </section>
 
@@ -371,8 +359,9 @@ const Home = () => {
                         className="random-code-btn"
                         title="Générer un code aléatoire"
                         aria-label="Générer un code aléatoire"
+                        style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                       >
-                        🎲
+                        <DiceIcon size={16} color="var(--nav-teal)" />
                       </button>
                     </div>
                     <button
@@ -492,8 +481,9 @@ const Home = () => {
                           </div>
                         </div>
                       ) : (
-                        <div className="mono" style={{ fontSize: '0.65rem', color: 'var(--nav-teal)', marginTop: '0.4rem' }}>
-                          ★ RANG SUPRÊME ATTEINT (ÉTAT-MAJOR)
+                        <div className="mono" style={{ fontSize: '0.65rem', color: 'var(--nav-gold)', marginTop: '0.4rem', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                          <MedalIcon size={13} color="var(--nav-gold)" />
+                          <span>RANG SUPRÊME ATTEINT (ÉTAT-MAJOR)</span>
                         </div>
                       )}
                     </div>

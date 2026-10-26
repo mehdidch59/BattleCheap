@@ -50,9 +50,9 @@ const Login = () => {
         <TiltCard accent="teal" className="bento-card auth-bento-card" style={{ width: '100%', maxWidth: '480px' }}>
           <div style={{ padding: '2.25rem' }}>
             {/* Header Telemetry */}
-            <div className="auth-telemetry-strip mono">
+            <div className="auth-telemetry-strip">
               <span className="status-indicator online blink-slow" style={{ width: '6px', height: '6px' }} />
-              <span>SEC_AUTH: DEFCON-1 • NORAD CRYPTO-LINK</span>
+              <span>Accès sécurisé au poste de commandement</span>
             </div>
 
             <div style={{ textAlign: 'center', marginBottom: '2rem' }}>

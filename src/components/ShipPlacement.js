@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { SHIPS_CONFIG, canPlaceShip, generateRandomFleet, GRID_SIZE } from '../utils/gameAI';
 import { ShipIcon } from './ShipGraphic';
 import { sound } from '../utils/audio';
+import { RotateIcon, UndoIcon, CheckIcon } from './TacticalIcons';
 
 const LETTERS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'];
 const NUMBERS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
@@ -284,17 +285,14 @@ const ShipPlacement = ({ onReady }) => {
       style={{ maxWidth: '850px', margin: '0 auto', padding: '1.5rem', outline: 'none' }}
     >
       <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
-        <div className="mono" style={{ color: 'var(--nav-teal)', fontSize: '0.85rem', letterSpacing: '3px' }}>
-          DISPOSITION STRATÉGIQUE DE L'ESCADRE
-        </div>
-        <h2 style={{ color: 'var(--nav-text)', margin: '0.2rem 0', fontSize: '2rem' }}>
-          DÉPLOIEMENT DES BÂTIMENTS
+        <h2 style={{ color: 'var(--nav-text)', margin: '0 0 0.4rem', fontSize: '1.75rem', letterSpacing: '1px' }}>
+          Déploiement de votre flotte
         </h2>
-        <p className="mono" style={{ color: 'var(--nav-slate)', fontSize: '0.85rem', margin: 0 }}>
+        <p style={{ color: 'var(--nav-slate)', fontSize: '0.85rem', margin: '0 auto', maxWidth: '580px', lineHeight: 1.5 }}>
           {!isCurrentShipPlaced
-            ? `Positionnez votre [${currentShip.name}] (${currentShip.size} cases). Appuyez sur R pour pivoter.`
+            ? `Positionnez votre ${currentShip.name} (${currentShip.size} cases). Appuyez sur R pour pivoter.`
             : placedShips.length === SHIPS_CONFIG.length
-              ? 'Tous les bâtiments sont déployés ! Cliquez sur un navire pour le déplacer ou verrouillez.'
+              ? 'Tous les bâtiments sont en position. Cliquez sur un navire pour le déplacer ou verrouillez la flotte.'
               : 'Sélectionnez un autre bâtiment ci-dessous pour continuer le déploiement.'}
         </p>
       </div>
@@ -328,8 +326,9 @@ const ShipPlacement = ({ onReady }) => {
               title={`Touche ${idx + 1} • Cliquez pour sélectionner ou repositionner`}
             >
               <ShipIcon type={ship.icon} size={16} color={isSelected || isPlaced ? 'var(--nav-teal)' : 'var(--nav-slate)'} />
-              <div style={{ fontSize: '0.75rem', fontWeight: 'bold', color: isPlaced ? 'var(--nav-teal)' : 'var(--nav-text)', marginTop: '4px' }}>
-                {isPlaced ? `✓ ${ship.name}` : `${idx + 1}. ${ship.name}`}
+              <div style={{ fontSize: '0.75rem', fontWeight: 'bold', color: isPlaced ? 'var(--nav-teal)' : 'var(--nav-text)', marginTop: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
+                {isPlaced && <CheckIcon size={12} color="var(--nav-teal)" />}
+                <span>{ship.name}</span>
               </div>
               <div className="mono" style={{ fontSize: '0.65rem', color: isSelected ? 'var(--nav-teal)' : 'var(--nav-slate)' }}>
                 {ship.size} CASES {isSelected && !isPlaced ? '• EN MAIN' : ''}
@@ -389,8 +388,10 @@ const ShipPlacement = ({ onReady }) => {
           className="btn btn-secondary"
           onClick={handleRotate}
           title="Raccourci clavier: Touche R"
+          style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
         >
-          PIVOTER (R): <span style={{ color: 'var(--nav-teal)', fontWeight: 'bold', marginLeft: '4px' }}>{orientation === 'horizontal' ? 'HORIZONTAL ➔' : 'VERTICAL ⬇'}</span>
+          <RotateIcon size={14} color="var(--nav-teal)" />
+          <span>PIVOTER (R) : <strong style={{ color: 'var(--nav-teal)' }}>{orientation === 'horizontal' ? 'HORIZONTAL' : 'VERTICAL'}</strong></span>
         </button>
 
         <button
@@ -406,8 +407,10 @@ const ShipPlacement = ({ onReady }) => {
           onClick={handleUndo}
           disabled={placedShips.length === 0}
           title="Raccourci clavier: Touche Z"
+          style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
         >
-          ↺ ANNULER (Z)
+          <UndoIcon size={14} color="currentColor" />
+          <span>ANNULER (Z)</span>
         </button>
 
         <button
