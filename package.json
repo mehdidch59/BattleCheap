@@ -128,7 +128,7 @@
         "concurrently": "^10.0.6",
         "eslint": "^8.57.0",
         "gh-pages": "^6.1.0",
-        "globals": "^17.13.0",
+        "globals": "^17.14.0",
         "prettier": "^3.9.10"
     }
 }
